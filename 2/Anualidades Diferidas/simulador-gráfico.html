@@ -3,512 +3,427 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador de Anualidades Diferidas</title>
+<title>Simulador: Anualidades Diferidas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
-    --card-bg: rgba(255, 255, 255, 0.85);
-    --card-border: rgba(255, 255, 255, 0.4);
+    --card-bg: #ffffff;
+    --card-border: rgba(0, 0, 0, 0.05);
     --text-main: #1e293b;
     --text-muted: #64748b;
     --primary: #4f46e5;
-    --primary-light: #818cf8;
+    --primary-hover: #4338ca;
+    --primary-light: rgba(79, 70, 229, 0.1);
     --secondary: #10b981;
     --input-bg: #ffffff;
     --input-border: #cbd5e1;
-    --formula-bg: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
-    --formula-text: #ffffff;
-    --timeline-bg: #ffffff;
-    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
       --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      --card-bg: rgba(30, 41, 59, 0.7);
-      --card-border: rgba(255, 255, 255, 0.05);
+      --card-bg: #1e293b;
+      --card-border: rgba(255, 255, 255, 0.1);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --primary: #818cf8;
-      --primary-light: #4f46e5;
+      --primary-hover: #6366f1;
+      --primary-light: rgba(129, 140, 248, 0.15);
       --secondary: #34d399;
       --input-bg: #0f172a;
       --input-border: #334155;
-      --formula-bg: linear-gradient(135deg, #3730a3 0%, #1e1b4b 100%);
-      --timeline-bg: #1e293b;
-      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
   }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   
   body { 
     font-family: 'Inter', sans-serif; 
     background: var(--bg-gradient); 
     color: var(--text-main); 
     min-height: 100vh; 
-    padding: 2rem 1rem; 
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
+    padding: 1rem;
   }
 
-  .sim-wrap { 
-    width: 100%;
-    max-width: 720px; 
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-  }
-
-  h1 { 
-    font-size: 24px; 
-    font-weight: 700; 
-    margin-bottom: 2rem; 
-    text-align: center;
-    letter-spacing: -0.5px;
-    color: var(--text-main);
-  }
-
-  /* NUEVA SECCIÓN PARA EL GIF */
-  .gif-section {
+  .wizard-container { 
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 16px;
-    margin-bottom: 1.5rem;
-    box-shadow: var(--shadow);
-    text-align: center;
-  }
-
-  .gif-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .gif-section img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 12px;
-    display: block;
-    margin: 0 auto;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  }
-
-  .inputs-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-    gap: 16px; 
-    margin-bottom: 1.5rem; 
-  }
-
-  .inp-card { 
-    background: var(--card-bg); 
-    border: 1px solid var(--card-border); 
-    border-radius: 16px; 
-    padding: 20px; 
-    box-shadow: var(--shadow);
-    transition: transform 0.2s ease;
-  }
-  
-  .inp-card:hover {
-    transform: translateY(-2px);
-  }
-
-  .inp-label { 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-    margin-bottom: 12px; 
-  }
-
-  .inp-symbol { 
-    background: var(--primary-light);
-    color: white;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    font-size: 14px; 
-    font-weight: 600; 
-    font-style: italic; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .inp-name { 
-    font-size: 13px; 
-    font-weight: 500;
-    color: var(--text-muted); 
-  }
-
-  .inp-row { 
-    display: flex; 
-    align-items: center; 
-    gap: 12px; 
-  }
-
-  .inp-row input { 
-    flex: 1; 
+    border-radius: 24px;
     width: 100%;
-    padding: 10px 14px; 
-    background: var(--input-bg);
-    color: var(--text-main);
-    border: 1px solid var(--input-border); 
-    border-radius: 10px; 
-    font-size: 16px; 
-    font-family: 'Inter', sans-serif;
-    font-weight: 500;
-    outline: none; 
-    transition: all 0.2s;
-  }
-
-  .inp-row input:focus { 
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); 
-    border-color: var(--primary); 
-  }
-
-  .inp-unit { 
-    font-size: 14px; 
-    font-weight: 600;
-    color: var(--text-muted); 
-  }
-
-  .formula-box { 
-    background: var(--formula-bg); 
-    color: var(--formula-text);
-    border-radius: 20px; 
-    padding: 24px; 
-    margin-bottom: 1.5rem; 
+    max-width: 600px;
+    padding: 2.5rem;
     box-shadow: var(--shadow);
-    text-align: center;
     position: relative;
     overflow: hidden;
   }
 
-  .formula-box::before {
-    content: '';
-    position: absolute;
-    top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-    pointer-events: none;
+  .progress-bar {
+    height: 6px;
+    background: var(--input-border);
+    border-radius: 3px;
+    margin-bottom: 2rem;
+    overflow: hidden;
   }
 
-  .formula-title { 
-    font-size: 14px; 
-    font-weight: 500;
-    opacity: 0.9;
-    margin-bottom: 16px; 
-    text-transform: uppercase;
-    letter-spacing: 1px;
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    width: 14%;
+    transition: width 0.3s ease;
   }
 
-  .formula-display { 
-    font-size: 18px; 
-    line-height: 2.2; 
+  .step {
+    display: none;
+    animation: fadeIn 0.4s ease forwards;
   }
 
-  .f-var { font-style: italic; font-weight: 600; }
+  .step.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  h2 { font-size: 22px; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-main); line-height: 1.3;}
   
-  .vp-result {
-    font-size: 32px;
-    font-weight: 700;
-    margin-top: 15px;
-    display: block;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  .subtitle { font-size: 15px; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    background: var(--input-bg);
+    color: var(--text-main);
+    border: 2px solid var(--input-border);
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 1.5rem;
   }
 
-  .timeline-section { 
-    background: var(--timeline-bg); 
-    border: 1px solid var(--card-border); 
-    border-radius: 20px; 
-    padding: 24px; 
-    box-shadow: var(--shadow);
+  input:focus, select:focus { border-color: var(--primary); }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1.5rem;
   }
 
-  .tl-title { 
-    font-size: 15px; 
+  .product-btn {
+    padding: 20px;
+    border: 2px solid var(--input-border);
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 16px;
     font-weight: 600;
-    color: var(--text-main); 
-    margin-bottom: 20px; 
+    cursor: pointer;
+    transition: all 0.2s;
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 8px;
   }
-  
-  .tl-title::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--secondary);
+
+  .product-btn.selected {
+    border-color: var(--primary);
+    background: var(--primary-light);
   }
 
-  canvas#tl { width: 100%; display: block; }
+  .product-icon { font-size: 32px; }
+
+  .btn-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+  }
+
+  button {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+  }
+
+  .btn-back { background: var(--input-border); color: var(--text-main); }
+  .btn-next { background: var(--primary); color: white; }
+  .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Summary Styles */
+  .summary-card {
+    background: var(--primary-light);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 2rem;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .summary-item { font-size: 14px; }
+  .summary-label { color: var(--text-muted); font-weight: 500; font-size: 12px; text-transform: uppercase;}
+  .summary-value { font-weight: 700; color: var(--text-main); margin-top: 4px; font-size: 16px;}
+
+  canvas#timeline { width: 100%; display: block; border-radius: 12px; border: 1px solid var(--input-border); background: var(--input-bg); margin-top: 1rem; }
 
 </style>
 </head>
 <body>
 
-<div class="sim-wrap">
-  <h1>Simulador de Anualidades Diferidas</h1>
+<div class="wizard-container">
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
 
- <div style="width: 100%; max-width: 600px; margin: 2rem auto; font-family: 'Inter', sans-serif; text-align: center;">
+  <div class="step active" id="step-1">
+    <h2>¡Bienvenido! ¿Cuál es tu nombre?</h2>
+    <input type="text" id="in-nombre" placeholder="Ingresa tu nombre..." oninput="checkStep(1)">
+  </div>
 
-    <div style="background-color: #ffffff; border-radius: 20px; padding: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); border: 1px solid rgba(0,0,0,0.05);">
-
-        <h3 style="font-size: 16px; color: #64748b; margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-            ¡Empezamos con Anualidades Diferidas!
-        </h3>
-
-        <img src="./../img/me.gif" 
-             alt="Emoji animado saludando" 
-             style="max-width: 100%; height: auto; border-radius: 12px; display: block; margin: 0 auto;">
-
-    </div>
-</div>
-
-  <div class="inputs-grid">
-    <div class="inp-card">
-      <div class="inp-label">
-        <span class="inp-symbol">n</span>
-        <span class="inp-name">Periodos de pago</span>
-      </div>
-      <div class="inp-row">
-        <input type="number" id="n" value="12" min="1" max="60" step="1" oninput="update()">
-        <span class="inp-unit">meses</span>
-      </div>
-    </div>
-    <div class="inp-card">
-      <div class="inp-label">
-        <span class="inp-symbol">i</span>
-        <span class="inp-name">Tasa de interés</span>
-      </div>
-      <div class="inp-row">
-        <input type="number" id="i" value="5" min="0.01" max="100" step="0.01" oninput="update()">
-        <span class="inp-unit">%</span>
-      </div>
-    </div>
-    <div class="inp-card">
-      <div class="inp-label">
-        <span class="inp-symbol">R</span>
-        <span class="inp-name">Renta (Pago)</span>
-      </div>
-      <div class="inp-row">
-        <input type="number" id="r" value="1000" min="1" step="1" oninput="update()">
-        <span class="inp-unit">$</span>
-      </div>
-    </div>
-    <div class="inp-card">
-      <div class="inp-label">
-        <span class="inp-symbol">k</span>
-        <span class="inp-name">Periodo de gracia</span>
-      </div>
-      <div class="inp-row">
-        <input type="number" id="k" value="4" min="1" max="60" step="1" oninput="update()">
-        <span class="inp-unit">meses</span>
-      </div>
+  <div class="step" id="step-2">
+    <h2 id="title-step-2">Hola, ¿qué te gustaría comprar?</h2>
+    <div class="product-grid">
+      <button class="product-btn" onclick="selectProduct('Laptop', this)"><span class="product-icon">💻</span>Laptop</button>
+      <button class="product-btn" onclick="selectProduct('Automóvil', this)"><span class="product-icon">🚗</span>Automóvil</button>
+      <button class="product-btn" onclick="selectProduct('Viaje', this)"><span class="product-icon">🏖️</span>Viaje</button>
+      <button class="product-btn" onclick="selectProduct('Celular', this)"><span class="product-icon">📱</span>Celular</button>
     </div>
   </div>
 
-  <!-- <div class="formula-box d-none">
-    <p class="formula-title">Valor Presente (VP)</p>
-    <div class="formula-display" id="formula-display"></div>
-  </div> -->
+  <div class="step" id="step-3">
+    <h2>¿Cuánto estás dispuesto a pagar y cada cuándo?</h2>
+    <p class="subtitle">Ingresa la cantidad que podrías dar en cada pago (Renta).</p>
+    <input type="number" id="in-renta" placeholder="$0.00" min="1" oninput="checkStep(3)">
+    <select id="in-frecuencia">
+      <option value="Mensual">Mensual</option>
+      <option value="Quincenal">Quincenal</option>
+      <option value="Semanal">Semanal</option>
+      <option value="Anual">Anual</option>
+    </select>
+  </div>
 
-  <div class="timeline-section">
-    <p class="tl-title">Flujo de Caja en el Tiempo</p>
-    <canvas id="tl"></canvas>
+  <div class="step" id="step-4">
+    <h2>¿Qué tasa de interés te ofrecen?</h2>
+    <p class="subtitle">Tasa de interés por periodo (en porcentaje).</p>
+    <input type="number" id="in-tasa" placeholder="Ej. 5" min="0.1" step="0.1" oninput="checkStep(4)">
+  </div>
+
+  <div class="step" id="step-5">
+    <h2>¿Cuántos pagos vas a realizar en total?</h2>
+    <p class="subtitle">Este es el tiempo que durará tu deuda una vez que empieces a pagar (n).</p>
+    <input type="number" id="in-n" placeholder="Ej. 12" min="1" oninput="checkStep(5)">
+  </div>
+
+  <div class="step" id="step-6">
+    <h2>¡Compre hoy, pague después!</h2>
+    <p class="subtitle">¿Cuántos periodos de "Gracia" o de "Espera" vas a tener antes de dar tu primer pago? (k).</p>
+    <input type="number" id="in-k" placeholder="Ej. 3" min="1" oninput="checkStep(6)">
+  </div>
+
+  <div class="step" id="step-7">
+    <h2>Flujo de Caja del Financiamiento</h2>
+    
+    <div class="summary-card">
+      <div class="summary-grid">
+        <div class="summary-item">
+          <div class="summary-label">Producto</div>
+          <div class="summary-value" id="out-producto"></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Pagos (Renta)</div>
+          <div class="summary-value" id="out-renta"></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Total de Pagos (n)</div>
+          <div class="summary-value" id="out-n"></div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Periodo de Gracia (k)</div>
+          <div class="summary-value" id="out-k"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="subtitle" style="margin-bottom: 0;">Representación visual de tus pagos en el tiempo:</p>
+    <canvas id="timeline" height="160"></canvas>
+  </div>
+
+  <div class="btn-nav">
+    <button class="btn-back" id="btn-back" onclick="prevStep()" style="visibility: hidden;">Atrás</button>
+    <button class="btn-next" id="btn-next" onclick="nextStep()" disabled>Siguiente</button>
   </div>
 </div>
 
 <script>
-function vals() {
-  return {
-    n: Math.max(1, parseInt(document.getElementById('n').value) || 1),
-    i: Math.max(0.0001, parseFloat(document.getElementById('i').value) || 0.01) / 100,
-    R: Math.max(0, parseFloat(document.getElementById('r').value) || 0),
-    k: Math.max(1, parseInt(document.getElementById('k').value) || 1)
+  let currentStep = 1;
+  const totalSteps = 7;
+  const data = {
+    nombre: '', producto: '', renta: '', frecuencia: 'Mensual', tasa: '', n: '', k: ''
   };
-}
 
-function update() {
-  const { n, i, R, k } = vals();
-  const annuity = (1 - Math.pow(1 + i, -n)) / i;
-  const discount = Math.pow(1 + i, -k);
-  const vp = R * annuity * discount;
+  function selectProduct(prod, btn) {
+    document.querySelectorAll('.product-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    data.producto = prod;
+    document.getElementById('btn-next').disabled = false;
+  }
 
-  document.getElementById('formula-display').innerHTML =
-    `VP = <span class="f-var">R</span> &times;
-     <span style="display:inline-block;text-align:center;vertical-align:middle;margin: 0 4px;">
-       <span style="display:block;border-bottom:2px solid rgba(255,255,255,0.5);padding:0 4px 4px 4px;">
-         1 &minus; (1 + <span class="f-var">i</span>)<sup>&minus;<span class="f-var">n</span></sup>
-       </span>
-       <span style="display:block;padding:4px 4px 0 4px;"><span class="f-var">i</span></span>
-     </span>
-     &times; (1 + <span class="f-var">i</span>)<sup>&minus;<span class="f-var">k</span></sup>
-     <br>
-     <span class="vp-result">$${vp.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`;
+  function checkStep(step) {
+    let isValid = false;
+    if (step === 1) isValid = document.getElementById('in-nombre').value.trim() !== '';
+    if (step === 3) isValid = document.getElementById('in-renta').value > 0;
+    if (step === 4) isValid = document.getElementById('in-tasa').value > 0;
+    if (step === 5) isValid = document.getElementById('in-n').value > 0;
+    if (step === 6) isValid = document.getElementById('in-k').value > 0;
+    document.getElementById('btn-next').disabled = !isValid;
+  }
 
-  drawTimeline();
-}
+  function updateView() {
+    document.querySelectorAll('.step').forEach((el, index) => {
+      el.classList.toggle('active', index + 1 === currentStep);
+    });
 
-function drawTimeline() {
-  const { n, k } = vals();
-  const canvas = document.getElementById('tl');
-  const dpr = window.devicePixelRatio || 1;
-  const W = canvas.parentElement.clientWidth - 48; // Padding adjustment
-  const total = k + n;
-  const maxShow = 20;
-  const showTotal = Math.min(total, maxShow);
-  const showK = Math.min(k, maxShow);
-  const showN = showTotal - showK;
-  const H = 140;
-
-  canvas.width = W * dpr;
-  canvas.height = H * dpr;
-  canvas.style.width = W + 'px';
-  canvas.style.height = H + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-
-  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const textSec = dark ? '#94a3b8' : '#64748b';
-  
-  // Variables CSS detectadas por JS para la paleta de colores
-  const deferColor = dark ? '#818cf8' : '#4f46e5'; 
-  const payColor = dark ? '#34d399' : '#10b981';
-  const lineColor = dark ? '#334155' : '#cbd5e1';
-
-  ctx.clearRect(0, 0, W, H);
-
-  const padL = 30, padR = 30;
-  const lineY = 75;
-  const usableW = W - padL - padR;
-  const spacing = usableW / showTotal;
-  const dotR = 6;
-
-  // Línea principal
-  ctx.strokeStyle = lineColor;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(padL, lineY);
-  ctx.lineTo(W - padR, lineY);
-  ctx.stroke();
-
-  // Punto 0
-  ctx.beginPath();
-  ctx.arc(padL, lineY, dotR, 0, Math.PI * 2);
-  ctx.fillStyle = lineColor;
-  ctx.fill();
-  ctx.fillStyle = textSec;
-  ctx.font = `600 12px Inter, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('0', padL, lineY + 24);
-
-  for (let p = 1; p <= showTotal; p++) {
-    const x = padL + p * spacing;
-    const isDeferral = p <= showK;
-    const color = isDeferral ? deferColor : payColor;
-
-    // Marcas en la línea
-    ctx.strokeStyle = color;
-    ctx.lineWidth = isDeferral ? 2 : 3;
-    ctx.beginPath();
-    ctx.moveTo(x, lineY - 8);
-    ctx.lineTo(x, lineY + 8);
-    ctx.stroke();
-
-    // Puntos
-    ctx.beginPath();
-    ctx.arc(x, lineY, dotR, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-
-    // Números debajo
-    const skipLabel = showTotal > 15 && p % 2 === 0 && p !== showTotal && p !== showK;
-    if (!skipLabel) {
-      ctx.fillStyle = textSec;
-      ctx.font = `500 11px Inter, sans-serif`;
-      ctx.fillText(p, x, lineY + 24);
+    document.getElementById('progress').style.width = `${(currentStep / totalSteps) * 100}%`;
+    document.getElementById('btn-back').style.visibility = currentStep > 1 && currentStep < 7 ? 'visible' : 'hidden';
+    
+    const btnNext = document.getElementById('btn-next');
+    if (currentStep === totalSteps) {
+      btnNext.style.display = 'none';
+      document.getElementById('btn-back').style.display = 'none';
+      renderSummary();
+    } else {
+      btnNext.style.display = 'block';
+      btnNext.innerText = currentStep === totalSteps - 1 ? 'Ver Gráfica' : 'Siguiente';
+      btnNext.disabled = true; // Requiere validación
+      if(currentStep === 2 && data.producto) btnNext.disabled = false;
+      checkStep(currentStep);
     }
 
-    // Flechas de pago (Renta)
-    if (!isDeferral) {
-      ctx.strokeStyle = payColor;
+    if(currentStep === 2) {
+      data.nombre = document.getElementById('in-nombre').value;
+      document.getElementById('title-step-2').innerText = `Hola ${data.nombre}, ¿qué te gustaría comprar?`;
+    }
+  }
+
+  function nextStep() { if (currentStep < totalSteps) { currentStep++; updateView(); } }
+  function prevStep() { if (currentStep > 1) { currentStep--; updateView(); } }
+
+  function renderSummary() {
+    data.renta = parseFloat(document.getElementById('in-renta').value);
+    data.frecuencia = document.getElementById('in-frecuencia').value;
+    data.n = parseInt(document.getElementById('in-n').value);
+    data.k = parseInt(document.getElementById('in-k').value);
+
+    document.getElementById('out-producto').innerText = data.producto;
+    document.getElementById('out-renta').innerText = `$${data.renta.toLocaleString('es-MX')} (${data.frecuencia})`;
+    document.getElementById('out-n').innerText = `${data.n} pagos`;
+    document.getElementById('out-k').innerText = `${data.k} periodos`;
+
+    drawTimeline();
+  }
+
+  function drawTimeline() {
+    const canvas = document.getElementById('timeline');
+    const W = canvas.parentElement.clientWidth;
+    const H = 160;
+    const dpr = window.devicePixelRatio || 1;
+    
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const textSec = dark ? '#94a3b8' : '#64748b';
+    const deferColor = dark ? '#818cf8' : '#4f46e5'; 
+    const payColor = dark ? '#34d399' : '#10b981';
+    const lineColor = dark ? '#334155' : '#cbd5e1';
+
+    ctx.clearRect(0, 0, W, H);
+
+    const padL = 30, padR = 30;
+    const lineY = 80;
+    const { n, k } = data;
+    const total = n + k;
+    const showK = Math.min(k, 10);
+    const showN = Math.min(n, 10);
+    const showTotal = showK + showN;
+    const spacing = (W - padL - padR) / showTotal;
+
+    // Eje principal
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(padL, lineY); ctx.lineTo(W - padR, lineY); ctx.stroke();
+
+    // Punto 0
+    ctx.fillStyle = lineColor;
+    ctx.beginPath(); ctx.arc(padL, lineY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = textSec; ctx.font = "12px Inter"; ctx.textAlign = "center";
+    ctx.fillText("0", padL, lineY + 20);
+
+    for (let p = 1; p <= showTotal; p++) {
+      const x = padL + p * spacing;
+      const isDeferral = p <= showK;
+      const color = isDeferral ? deferColor : payColor;
+
+      ctx.strokeStyle = color;
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(x, lineY - 24);
-      ctx.lineTo(x, lineY - 12);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, lineY - 6); ctx.lineTo(x, lineY + 6); ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(x, lineY, 5, 0, Math.PI * 2); ctx.fill();
       
-      // Punta de flecha
-      ctx.beginPath();
-      ctx.moveTo(x - 5, lineY - 17);
-      ctx.lineTo(x, lineY - 10);
-      ctx.lineTo(x + 5, lineY - 17);
-      ctx.stroke();
-      
-      if (p === showK + 1) {
-        ctx.fillStyle = payColor;
-        ctx.font = `700 13px Inter, sans-serif`;
-        ctx.fillText('R', x, lineY - 30);
+      ctx.fillStyle = textSec;
+      ctx.fillText(p, x, lineY + 20);
+
+      // Flechas de pago
+      if (!isDeferral) {
+        ctx.strokeStyle = payColor;
+        ctx.beginPath(); ctx.moveTo(x, lineY - 25); ctx.lineTo(x, lineY - 10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 4, lineY - 15); ctx.lineTo(x, lineY - 10); ctx.lineTo(x + 4, lineY - 15); ctx.stroke();
+        if(p === showK + 1) {
+            ctx.fillStyle = payColor; ctx.font = "bold 12px Inter";
+            ctx.fillText("R", x, lineY - 30);
+        }
       }
     }
-  }
 
-  // Puntos suspensivos si exceden el límite de vista
-  if (total > maxShow) {
-    ctx.fillStyle = textSec;
-    ctx.font = `700 14px Inter, sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText('...', W - padR + 10, lineY + 5);
-  }
+    if (total > showTotal) {
+      ctx.fillStyle = textSec; ctx.fillText("...", W - padR + 10, lineY + 5);
+    }
 
-  // Corchete de diferimiento (k)
-  const x0 = padL, xk = padL + showK * spacing;
-  ctx.strokeStyle = deferColor;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x0, lineY + 38);
-  ctx.lineTo(x0, lineY + 44);
-  ctx.lineTo(xk, lineY + 44);
-  ctx.lineTo(xk, lineY + 38);
-  ctx.stroke();
-  
-  ctx.fillStyle = deferColor;
-  ctx.font = `600 12px Inter, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText(`k = ${k} (Gracia)`, (x0 + xk) / 2, lineY + 60);
-
-  // Corchete de pagos (n)
-  if (showN > 0) {
-    const xn = padL + showTotal * spacing;
-    ctx.strokeStyle = payColor;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(xk, lineY - 48);
-    ctx.lineTo(xk, lineY - 54);
-    ctx.lineTo(xn, lineY - 54);
-    ctx.lineTo(xn, lineY - 48);
-    ctx.stroke();
+    // Etiquetas de zona
+    const x0 = padL, xk = padL + showK * spacing, xn = padL + showTotal * spacing;
     
-    ctx.fillStyle = payColor;
-    ctx.font = `600 12px Inter, sans-serif`;
-    ctx.fillText(`n = ${vals().n} pagos`, (xk + xn) / 2, lineY - 62);
-  }
-}
+    // Gracia
+    ctx.strokeStyle = deferColor;
+    ctx.beginPath(); ctx.moveTo(x0, lineY + 35); ctx.lineTo(x0, lineY + 40); ctx.lineTo(xk, lineY + 40); ctx.lineTo(xk, lineY + 35); ctx.stroke();
+    ctx.fillStyle = deferColor; ctx.font = "500 12px Inter";
+    ctx.fillText(`Gracia (k=${k})`, (x0 + xk) / 2, lineY + 55);
 
-window.addEventListener('resize', update);
-update();
+    // Pagos
+    if (showN > 0) {
+      ctx.strokeStyle = payColor;
+      ctx.beginPath(); ctx.moveTo(xk, lineY - 50); ctx.lineTo(xk, lineY - 55); ctx.lineTo(xn, lineY - 55); ctx.lineTo(xn, lineY - 50); ctx.stroke();
+      ctx.fillStyle = payColor;
+      ctx.fillText(`Pagos (n=${n})`, (xk + xn) / 2, lineY - 62);
+    }
+  }
 </script>
 </body>
 </html>
