@@ -48,7 +48,7 @@
 
   .summary { background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; text-align: left; }
   .summary p { margin-bottom: 8px; font-size: 0.95rem; }
-  canvas { width: 100%; background: var(--bg); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
+  canvas { width: 100%; background: var(--bg); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); image-rendering: pixelated; image-rendering: -moz-crisp-edges; }
 </style>
 </head>
 <body>
@@ -141,7 +141,6 @@ function change(dir) {
 function finish() {
   document.getElementById('nav').style.display = 'none';
   
-  // Capturar datos
   state.n = document.getElementById('nombre').value;
   state.r = parseFloat(document.getElementById('renta').value);
   state.f = document.getElementById('freq').value;
@@ -152,121 +151,150 @@ function finish() {
   document.getElementById('res-title').innerText = `¡Listo, ${state.n}!`;
   document.getElementById('res-body').innerHTML = `
     <p><b>Producto:</b> ${state.e} ${state.p}</p>
-    <p><b>Pago:</b> $${state.r.toLocaleString()} ${state.f}</p>
+    <p><b>Primer pago:</b> Periodo <strong>${state.k}</strong> (${state.f})</p>
+    <p><b>Pago:</b> $${state.r.toLocaleString()} × ${state.np} ${state.f}</p>
     <p><b>Interés:</b> ${state.i}%</p>
-    <p><b>Gracia:</b> ${state.k} ${state.f.toLowerCase()}s</p>
-    <p><b>Total pagos:</b> ${state.np} periodos</p>
   `;
 
   confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
   
-  // Simular flujos VISUALES
   simulateVisualFlow();
   draw();
 }
 
-// 🎨 Simulación VISUAL simple
+// ✅ CORREGIDO: Primer pago EXACTAMENTE en periodo k
 function simulateVisualFlow() {
   state.flujos = [];
   
-  // Períodos de gracia (sin pago)
-  for(let p = 1; p <= state.k; p++) {
+  // Períodos 1 a k-1: GRACIA (sin pago)
+  for(let p = 1; p < state.k; p++) {
     state.flujos.push({ periodo: p, pago: 0, saldo: 100 });
   }
   
-  // Períodos de pago (saldo disminuye)
-  for(let p = state.k + 1; p <= state.k + state.np; p++) {
-    const progreso = ((p - state.k - 1) / state.np) * 100;
-    state.flujos.push({ 
-      periodo: p, 
-      pago: state.r, 
-      saldo: Math.max(0, 100 - progreso) 
-    });
+  // Periodo k: PRIMER PAGO ✓
+  state.flujos.push({ periodo: state.k, pago: state.r, saldo: 95 });
+  
+  // Resto de pagos: saldo baja gradualmente
+  let saldoActual = 95;
+  for(let p = state.k + 1; p <= state.k + state.np - 1; p++) {
+    saldoActual = Math.max(0, saldoActual - (100 / state.np));
+    state.flujos.push({ periodo: p, pago: state.r, saldo: saldoActual });
   }
+  
+  // Asegurar que termine en 0
+  state.flujos.push({ periodo: state.k + state.np - 1, pago: state.r, saldo: 0 });
 }
 
-// 🖼️ GRÁFICA VISUAL
+// 🖼️ GRÁFICA RECTA Y ANTIALIASING
 function draw() {
   const c = document.getElementById('grafica');
   const ctx = c.getContext('2d');
-  const w = c.parentElement.clientWidth - 64;
-  const h = 180;
+  
+  // 🔧 RESOLUCIÓN 2x PARA ANTIALIASING PERFECTO
+  const rect = c.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = rect.width * dpr;
+  const h = 180 * dpr;
+  
   c.width = w;
   c.height = h;
+  c.style.width = rect.width + 'px';
+  c.style.height = '180px';
   
-  ctx.clearRect(0, 0, w, h);
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, rect.width, 180);
   
   const total = state.flujos.length;
-  const space = Math.max(25, (w - 80) / total);
+  const margin = 40;
+  const space = Math.max(30, (rect.width - margin * 2) / Math.min(total, 16));
   
-  // 📈 Ejes
+  // 📈 EJE HORIZONTAL (recto)
   ctx.strokeStyle = '#cbd5e1';
   ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(40, 25);
-  ctx.lineTo(w - 20, 25);
-  ctx.lineTo(w - 20, h - 15);
-  ctx.lineTo(40, h - 15);
+  ctx.moveTo(margin, 35);
+  ctx.lineTo(rect.width - margin, 35);
+  ctx.lineTo(rect.width - margin, 155);
+  ctx.lineTo(margin, 155);
   ctx.stroke();
   
-  // Números períodos
+  // Etiquetas períodos
   ctx.fillStyle = '#64748b';
-  ctx.font = "11px Inter, sans-serif";
+  ctx.font = `12px Inter, sans-serif`;
   ctx.textAlign = "center";
-  state.flujos.slice(0, 15).forEach((f, i) => {
-    const x = 40 + (i * space) + space/2;
-    ctx.fillText(f.periodo, x, 22);
+  ctx.textBaseline = "middle";
+  
+  state.flujos.slice(0, 16).forEach((f, i) => {
+    const x = margin + (i * space) + space/2;
+    ctx.fillText(f.periodo.toString(), x, 30);
   });
   
-  // 🔵 Zona GRACIA
-  ctx.fillStyle = 'rgba(79, 70, 229, 0.08)';
-  ctx.fillRect(40, 25, state.k * space, h - 50);
+  // 🔵 ZONA GRACIA (hasta k-1)
+  if(state.k > 1) {
+    ctx.fillStyle = 'rgba(79, 70, 229, 0.08)';
+    ctx.fillRect(margin, 35, (state.k - 1) * space, 110);
+    
+    ctx.fillStyle = '#4f46e5';
+    ctx.font = `bold 11px Inter, sans-serif`;
+    ctx.fillText("GRACIA", margin + ((state.k - 1) * space)/2, 28);
+  }
   
-  ctx.fillStyle = '#4f46e5';
-  ctx.font = "bold 11px Inter, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("GRACIA", 40 + (state.k * space)/2, 18);
-  
-  // 🔴 LÍNEA SALDO
+  // 🔴 LÍNEA SALDO RECTA (smooth)
   ctx.strokeStyle = '#ef4444';
   ctx.lineWidth = 3;
-  ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = 'rgba(239, 68, 68, 0.3)';
   ctx.beginPath();
-  state.flujos.slice(0, 15).forEach((f, i) => {
-    const x = 40 + (i * space) + space/2;
-    const y = 25 + (f.saldo / 100) * (h - 60);
+  
+  state.flujos.slice(0, 16).forEach((f, i) => {
+    const x = margin + (i * space) + space/2;
+    const y = 35 + (f.saldo / 100) * 110;
     if(i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
+  ctx.shadowBlur = 0;
   ctx.stroke();
   
-  // 💰 BARRAS PAGOS
-  state.flujos.slice(0, 15).forEach((f, i) => {
+  // 💰 BARRAS PAGOS (desde periodo k)
+  state.flujos.slice(0, 16).forEach((f, i) => {
     if(f.pago > 0) {
-      const x = 40 + (i * space) + space/2;
-      const barWidth = 8;
-      const barHeight = 20;
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(x - barWidth/2, h - 45, barWidth, -barHeight);
+      const x = margin + (i * space) + space/2;
+      const barWidth = 10;
+      const barHeight = 25;
+      const barY = 155 - barHeight;
       
-      // $ en primer pago
-      if(i === state.k) {
+      // Sombra barra
+      ctx.shadowColor = 'rgba(16, 185, 129, 0.3)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(x - barWidth/2, barY, barWidth, barHeight);
+      ctx.shadowBlur = 0;
+      
+      // $ en PRIMER pago (periodo k)
+      if(f.periodo === state.k) {
         ctx.fillStyle = 'white';
-        ctx.font = "bold 10px Inter, sans-serif";
+        ctx.font = `bold 11px Inter, sans-serif`;
         ctx.textAlign = "center";
-        ctx.fillText("$", x, h - 35);
+        ctx.textBaseline = "middle";
+        ctx.fillText("$", x, barY + barHeight/2);
       }
     }
   });
   
   // 📋 Leyenda
   ctx.textAlign = "left";
-  ctx.font = "bold 12px Inter, sans-serif";
+  ctx.textBaseline = "middle";
+  ctx.font = `bold 13px Inter, sans-serif`;
   ctx.fillStyle = '#ef4444';
-  ctx.fillText("💳 Saldo", 45, h - 5);
+  ctx.fillText("💳 Saldo", margin, 165);
   ctx.fillStyle = '#10b981';
-  ctx.fillText("💵 Pagos", 120, h - 5);
+  ctx.fillText("💵 Pagos", margin + 80, 165);
 }
 </script>
 </body>
