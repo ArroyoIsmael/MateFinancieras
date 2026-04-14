@@ -164,23 +164,69 @@ function finish() {
 function draw() {
   const c = document.getElementById('grafica');
   const ctx = c.getContext('2d');
-  const w = c.width, h = c.height;
-  ctx.clearRect(0,0,w,h);
+  
+  // Ajuste de resolución para que la gráfica sea nítida y no se deforme
+  const w = c.parentElement.clientWidth - 64; 
+  const h = 150;
+  c.width = w;
+  c.height = h;
+  
+  ctx.clearRect(0, 0, w, h);
   
   const total = state.np + state.k;
   const space = (w - 60) / total;
   const y = 80;
 
-  ctx.strokeStyle = '#cbd5e1'; ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w-30, y); ctx.stroke();
+  // Línea del tiempo principal
+  ctx.strokeStyle = '#cbd5e1'; 
+  ctx.lineWidth = 2;
+  ctx.beginPath(); 
+  ctx.moveTo(30, y); 
+  ctx.lineTo(w - 30, y); 
+  ctx.stroke();
 
-  for(let i=0; i<=total; i++) {
+  for(let i = 0; i <= total; i++) {
     const x = 30 + (i * space);
-    const color = i < state.k ? '#4f46e5' : '#10b981';
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill();
-    ctx.font = "10px sans-serif"; ctx.fillText(i, x-5, y+20);
     
-    if(i >= state.k) {
-      ctx.strokeStyle = '#10b981'; ctx.beginPath(); ctx.moveTo(x, y-5); ctx.lineTo(x, y-20); ctx.stroke();
+    // CORRECCIÓN 1: El periodo de gracia (azul) abarca hasta k.
+    const color = i <= state.k ? '#4f46e5' : '#10b981';
+    
+    // Dibujar el punto en la línea
+    ctx.fillStyle = color; 
+    ctx.beginPath(); 
+    ctx.arc(x, y, 4, 0, Math.PI * 2); 
+    ctx.fill();
+    
+    // Número del periodo
+    ctx.fillStyle = '#64748b';
+    ctx.font = "11px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(i, x, y + 20);
+    
+    // CORRECCIÓN 2: Las flechas de pago (Renta) inician estrictamente en k + 1
+    if(i > state.k) {
+      ctx.strokeStyle = '#10b981'; 
+      ctx.lineWidth = 2;
+      
+      // Palo de la flecha
+      ctx.beginPath(); 
+      ctx.moveTo(x, y - 8); 
+      ctx.lineTo(x, y - 25); 
+      ctx.stroke();
+      
+      // Punta de la flecha (indicando flujo de salida)
+      ctx.beginPath();
+      ctx.moveTo(x - 4, y - 14);
+      ctx.lineTo(x, y - 8);
+      ctx.lineTo(x + 4, y - 14);
+      ctx.stroke();
+      
+      // Poner la "R" de renta en el primer pago para mayor claridad didáctica
+      if (i === state.k + 1) {
+          ctx.fillStyle = '#10b981';
+          ctx.font = "bold 12px Inter, sans-serif";
+          ctx.fillText("R", x, y - 32);
+      }
     }
   }
 }
