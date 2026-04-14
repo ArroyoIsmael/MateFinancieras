@@ -72,6 +72,35 @@
     color: var(--text-main);
   }
 
+  /* NUEVA SECCIÓN PARA EL GIF */
+  .gif-section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+
+  .gif-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .gif-section img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
   .inputs-grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
@@ -232,6 +261,11 @@
 <div class="sim-wrap">
   <h1>Simulador de Anualidades Diferidas</h1>
 
+  <div class="gif-section">
+    <p class="gif-title">¿Cómo funciona?</p>
+    <img src="./../img/me.gif" alt="Animación explicativa de anualidades diferidas">
+  </div>
+
   <div class="inputs-grid">
     <div class="inp-card">
       <div class="inp-label">
@@ -275,7 +309,7 @@
     </div>
   </div>
 
-  <div class="formula-box">
+  <div class="formula-box d-none">
     <p class="formula-title">Valor Presente (VP)</p>
     <div class="formula-display" id="formula-display"></div>
   </div>
