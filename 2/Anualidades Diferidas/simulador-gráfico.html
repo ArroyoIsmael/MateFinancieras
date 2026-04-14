@@ -21,7 +21,6 @@
   
   .wizard { background: var(--card); border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 600px; padding: 2rem; box-shadow: var(--shadow); text-align: center; }
   
-  /* Contenedor del Emoji Animado */
   .avatar-header { margin-bottom: 1.5rem; }
   .avatar-header img { width: 120px; height: auto; border-radius: 50%; }
 
@@ -47,7 +46,6 @@
   .next:disabled { opacity: 0.5; }
   .back { background: var(--border); color: var(--text); }
 
-  /* Resumen */
   .summary { background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; text-align: left; }
   .summary p { margin-bottom: 8px; font-size: 0.95rem; }
   canvas { width: 100%; background: var(--bg); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
@@ -101,7 +99,7 @@
   <div class="step" id="s7">
     <h2 id="res-title">¡Felicidades!</h2>
     <div class="summary" id="res-body"></div>
-    <canvas id="grafica" height="150"></canvas>
+    <canvas id="grafica" height="180"></canvas>
   </div>
 
   <div class="nav-btns" id="nav">
@@ -142,93 +140,133 @@ function change(dir) {
 
 function finish() {
   document.getElementById('nav').style.display = 'none';
+  
+  // Capturar datos
   state.n = document.getElementById('nombre').value;
-  state.r = document.getElementById('renta').value;
+  state.r = parseFloat(document.getElementById('renta').value);
   state.f = document.getElementById('freq').value;
-  state.i = document.getElementById('tasa').value;
+  state.i = parseFloat(document.getElementById('tasa').value);
   state.np = parseInt(document.getElementById('n').value);
   state.k = parseInt(document.getElementById('k').value);
 
   document.getElementById('res-title').innerText = `¡Listo, ${state.n}!`;
   document.getElementById('res-body').innerHTML = `
     <p><b>Producto:</b> ${state.e} ${state.p}</p>
-    <p><b>Pago:</b> $${state.r} ${state.f}</p>
+    <p><b>Pago:</b> $${state.r.toLocaleString()} ${state.f}</p>
     <p><b>Interés:</b> ${state.i}%</p>
-    <p><b>Diferimiento:</b> Inicias en el periodo ${state.k}</p>
+    <p><b>Gracia:</b> ${state.k} ${state.f.toLowerCase()}s</p>
+    <p><b>Total pagos:</b> ${state.np} periodos</p>
   `;
 
   confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+  
+  // Simular flujos VISUALES
+  simulateVisualFlow();
   draw();
 }
 
+// 🎨 Simulación VISUAL simple
+function simulateVisualFlow() {
+  state.flujos = [];
+  
+  // Períodos de gracia (sin pago)
+  for(let p = 1; p <= state.k; p++) {
+    state.flujos.push({ periodo: p, pago: 0, saldo: 100 });
+  }
+  
+  // Períodos de pago (saldo disminuye)
+  for(let p = state.k + 1; p <= state.k + state.np; p++) {
+    const progreso = ((p - state.k - 1) / state.np) * 100;
+    state.flujos.push({ 
+      periodo: p, 
+      pago: state.r, 
+      saldo: Math.max(0, 100 - progreso) 
+    });
+  }
+}
+
+// 🖼️ GRÁFICA VISUAL
 function draw() {
   const c = document.getElementById('grafica');
   const ctx = c.getContext('2d');
-  
-  // Ajuste de resolución para que la gráfica sea nítida y no se deforme
-  const w = c.parentElement.clientWidth - 64; 
-  const h = 150;
+  const w = c.parentElement.clientWidth - 64;
+  const h = 180;
   c.width = w;
   c.height = h;
   
   ctx.clearRect(0, 0, w, h);
   
-  const total = state.np + state.k;
-  const space = (w - 60) / total;
-  const y = 80;
-
-  // Línea del tiempo principal
-  ctx.strokeStyle = '#cbd5e1'; 
+  const total = state.flujos.length;
+  const space = Math.max(25, (w - 80) / total);
+  
+  // 📈 Ejes
+  ctx.strokeStyle = '#cbd5e1';
   ctx.lineWidth = 2;
-  ctx.beginPath(); 
-  ctx.moveTo(30, y); 
-  ctx.lineTo(w - 30, y); 
+  ctx.beginPath();
+  ctx.moveTo(40, 25);
+  ctx.lineTo(w - 20, 25);
+  ctx.lineTo(w - 20, h - 15);
+  ctx.lineTo(40, h - 15);
   ctx.stroke();
-
-  for(let i = 0; i <= total; i++) {
-    const x = 30 + (i * space);
-    
-    // CORRECCIÓN 1: El periodo de gracia (azul) abarca hasta k.
-    const color = i <= state.k ? '#4f46e5' : '#10b981';
-    
-    // Dibujar el punto en la línea
-    ctx.fillStyle = color; 
-    ctx.beginPath(); 
-    ctx.arc(x, y, 4, 0, Math.PI * 2); 
-    ctx.fill();
-    
-    // Número del periodo
-    ctx.fillStyle = '#64748b';
-    ctx.font = "11px Inter, sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(i, x, y + 20);
-    
-    // CORRECCIÓN 2: Las flechas de pago (Renta) inician estrictamente en k + 1
-    if(i > state.k) {
-      ctx.strokeStyle = '#10b981'; 
-      ctx.lineWidth = 2;
+  
+  // Números períodos
+  ctx.fillStyle = '#64748b';
+  ctx.font = "11px Inter, sans-serif";
+  ctx.textAlign = "center";
+  state.flujos.slice(0, 15).forEach((f, i) => {
+    const x = 40 + (i * space) + space/2;
+    ctx.fillText(f.periodo, x, 22);
+  });
+  
+  // 🔵 Zona GRACIA
+  ctx.fillStyle = 'rgba(79, 70, 229, 0.08)';
+  ctx.fillRect(40, 25, state.k * space, h - 50);
+  
+  ctx.fillStyle = '#4f46e5';
+  ctx.font = "bold 11px Inter, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("GRACIA", 40 + (state.k * space)/2, 18);
+  
+  // 🔴 LÍNEA SALDO
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 3;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  state.flujos.slice(0, 15).forEach((f, i) => {
+    const x = 40 + (i * space) + space/2;
+    const y = 25 + (f.saldo / 100) * (h - 60);
+    if(i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  
+  // 💰 BARRAS PAGOS
+  state.flujos.slice(0, 15).forEach((f, i) => {
+    if(f.pago > 0) {
+      const x = 40 + (i * space) + space/2;
+      const barWidth = 8;
+      const barHeight = 20;
+      ctx.fillStyle = '#10b981';
+      ctx.fillRect(x - barWidth/2, h - 45, barWidth, -barHeight);
       
-      // Palo de la flecha
-      ctx.beginPath(); 
-      ctx.moveTo(x, y - 8); 
-      ctx.lineTo(x, y - 25); 
-      ctx.stroke();
-      
-      // Punta de la flecha (indicando flujo de salida)
-      ctx.beginPath();
-      ctx.moveTo(x - 4, y - 14);
-      ctx.lineTo(x, y - 8);
-      ctx.lineTo(x + 4, y - 14);
-      ctx.stroke();
-      
-      // Poner la "R" de renta en el primer pago para mayor claridad didáctica
-      if (i === state.k + 1) {
-          ctx.fillStyle = '#10b981';
-          ctx.font = "bold 12px Inter, sans-serif";
-          ctx.fillText("R", x, y - 32);
+      // $ en primer pago
+      if(i === state.k) {
+        ctx.fillStyle = 'white';
+        ctx.font = "bold 10px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("$", x, h - 35);
       }
     }
-  }
+  });
+  
+  // 📋 Leyenda
+  ctx.textAlign = "left";
+  ctx.font = "bold 12px Inter, sans-serif";
+  ctx.fillStyle = '#ef4444';
+  ctx.fillText("💳 Saldo", 45, h - 5);
+  ctx.fillStyle = '#10b981';
+  ctx.fillText("💵 Pagos", 120, h - 5);
 }
 </script>
 </body>
