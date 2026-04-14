@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Anualidades Diferidas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    --card-bg: rgba(255, 255, 255, 0.85);
+    --card-border: rgba(255, 255, 255, 0.4);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #4f46e5;
+    --primary-light: #818cf8;
+    --secondary: #10b981;
+    --input-bg: #ffffff;
+    --input-border: #cbd5e1;
+    --formula-bg: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    --formula-text: #ffffff;
+    --timeline-bg: #ffffff;
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.05);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #818cf8;
+      --primary-light: #4f46e5;
+      --secondary: #34d399;
+      --input-bg: #0f172a;
+      --input-border: #334155;
+      --formula-bg: linear-gradient(135deg, #3730a3 0%, #1e1b4b 100%);
+      --timeline-bg: #1e293b;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body { 
+    font-family: 'Inter', sans-serif; 
+    background: var(--bg-gradient); 
+    color: var(--text-main); 
+    min-height: 100vh; 
+    padding: 2rem 1rem; 
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .sim-wrap { 
+    width: 100%;
+    max-width: 720px; 
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  h1 { 
+    font-size: 24px; 
+    font-weight: 700; 
+    margin-bottom: 2rem; 
+    text-align: center;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+  }
+
+  .inputs-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 16px; 
+    margin-bottom: 1.5rem; 
+  }
+
+  .inp-card { 
+    background: var(--card-bg); 
+    border: 1px solid var(--card-border); 
+    border-radius: 16px; 
+    padding: 20px; 
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease;
+  }
+  
+  .inp-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .inp-label { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 12px; 
+  }
+
+  .inp-symbol { 
+    background: var(--primary-light);
+    color: white;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 14px; 
+    font-weight: 600; 
+    font-style: italic; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .inp-name { 
+    font-size: 13px; 
+    font-weight: 500;
+    color: var(--text-muted); 
+  }
+
+  .inp-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+  }
+
+  .inp-row input { 
+    flex: 1; 
+    width: 100%;
+    padding: 10px 14px; 
+    background: var(--input-bg);
+    color: var(--text-main);
+    border: 1px solid var(--input-border); 
+    border-radius: 10px; 
+    font-size: 16px; 
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    outline: none; 
+    transition: all 0.2s;
+  }
+
+  .inp-row input:focus { 
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); 
+    border-color: var(--primary); 
+  }
+
+  .inp-unit { 
+    font-size: 14px; 
+    font-weight: 600;
+    color: var(--text-muted); 
+  }
+
+  .formula-box { 
+    background: var(--formula-bg); 
+    color: var(--formula-text);
+    border-radius: 20px; 
+    padding: 24px; 
+    margin-bottom: 1.5rem; 
+    box-shadow: var(--shadow);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .formula-box::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .formula-title { 
+    font-size: 14px; 
+    font-weight: 500;
+    opacity: 0.9;
+    margin-bottom: 16px; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .formula-display { 
+    font-size: 18px; 
+    line-height: 2.2; 
+  }
+
+  .f-var { font-style: italic; font-weight: 600; }
+  
+  .vp-result {
+    font-size: 32px;
+    font-weight: 700;
+    margin-top: 15px;
+    display: block;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .timeline-section { 
+    background: var(--timeline-bg); 
+    border: 1px solid var(--card-border); 
+    border-radius: 20px; 
+    padding: 24px; 
+    box-shadow: var(--shadow);
+  }
+
+  .tl-title { 
+    font-size: 15px; 
+    font-weight: 600;
+    color: var(--text-main); 
+    margin-bottom: 20px; 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .tl-title::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--secondary);
+  }
+
+  canvas#tl { width: 100%; display: block; }
+
+</style>
+</head>
+<body>
+
+<div class="sim-wrap">
+  <h1>Simulador de Anualidades Diferidas</h1>
+
+  <div class="inputs-grid">
+    <div class="inp-card">
+      <div class="inp-label">
+        <span class="inp-symbol">n</span>
+        <span class="inp-name">Periodos de pago</span>
+      </div>
+      <div class="inp-row">
+        <input type="number" id="n" value="12" min="1" max="60" step="1" oninput="update()">
+        <span class="inp-unit">meses</span>
+      </div>
+    </div>
+    <div class="inp-card">
+      <div class="inp-label">
+        <span class="inp-symbol">i</span>
+        <span class="inp-name">Tasa de interés</span>
+      </div>
+      <div class="inp-row">
+        <input type="number" id="i" value="5" min="0.01" max="100" step="0.01" oninput="update()">
+        <span class="inp-unit">%</span>
+      </div>
+    </div>
+    <div class="inp-card">
+      <div class="inp-label">
+        <span class="inp-symbol">R</span>
+        <span class="inp-name">Renta (Pago)</span>
+      </div>
+      <div class="inp-row">
+        <input type="number" id="r" value="1000" min="1" step="1" oninput="update()">
+        <span class="inp-unit">$</span>
+      </div>
+    </div>
+    <div class="inp-card">
+      <div class="inp-label">
+        <span class="inp-symbol">k</span>
+        <span class="inp-name">Periodo de gracia</span>
+      </div>
+      <div class="inp-row">
+        <input type="number" id="k" value="4" min="1" max="60" step="1" oninput="update()">
+        <span class="inp-unit">meses</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <p class="formula-title">Valor Presente (VP)</p>
+    <div class="formula-display" id="formula-display"></div>
+  </div>
+
+  <div class="timeline-section">
+    <p class="tl-title">Flujo de Caja en el Tiempo</p>
+    <canvas id="tl"></canvas>
+  </div>
+</div>
+
+<script>
+function vals() {
+  return {
+    n: Math.max(1, parseInt(document.getElementById('n').value) || 1),
+    i: Math.max(0.0001, parseFloat(document.getElementById('i').value) || 0.01) / 100,
+    R: Math.max(0, parseFloat(document.getElementById('r').value) || 0),
+    k: Math.max(1, parseInt(document.getElementById('k').value) || 1)
+  };
+}
+
+function update() {
+  const { n, i, R, k } = vals();
+  const annuity = (1 - Math.pow(1 + i, -n)) / i;
+  const discount = Math.pow(1 + i, -k);
+  const vp = R * annuity * discount;
+
+  document.getElementById('formula-display').innerHTML =
+    `VP = <span class="f-var">R</span> &times;
+     <span style="display:inline-block;text-align:center;vertical-align:middle;margin: 0 4px;">
+       <span style="display:block;border-bottom:2px solid rgba(255,255,255,0.5);padding:0 4px 4px 4px;">
+         1 &minus; (1 + <span class="f-var">i</span>)<sup>&minus;<span class="f-var">n</span></sup>
+       </span>
+       <span style="display:block;padding:4px 4px 0 4px;"><span class="f-var">i</span></span>
+     </span>
+     &times; (1 + <span class="f-var">i</span>)<sup>&minus;<span class="f-var">k</span></sup>
+     <br>
+     <span class="vp-result">$${vp.toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2})}</span>`;
+
+  drawTimeline();
+}
+
+function drawTimeline() {
+  const { n, k } = vals();
+  const canvas = document.getElementById('tl');
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.parentElement.clientWidth - 48; // Padding adjustment
+  const total = k + n;
+  const maxShow = 20;
+  const showTotal = Math.min(total, maxShow);
+  const showK = Math.min(k, maxShow);
+  const showN = showTotal - showK;
+  const H = 140;
+
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const textSec = dark ? '#94a3b8' : '#64748b';
+  
+  // Variables CSS detectadas por JS para la paleta de colores
+  const deferColor = dark ? '#818cf8' : '#4f46e5'; 
+  const payColor = dark ? '#34d399' : '#10b981';
+  const lineColor = dark ? '#334155' : '#cbd5e1';
+
+  ctx.clearRect(0, 0, W, H);
+
+  const padL = 30, padR = 30;
+  const lineY = 75;
+  const usableW = W - padL - padR;
+  const spacing = usableW / showTotal;
+  const dotR = 6;
+
+  // Línea principal
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(padL, lineY);
+  ctx.lineTo(W - padR, lineY);
+  ctx.stroke();
+
+  // Punto 0
+  ctx.beginPath();
+  ctx.arc(padL, lineY, dotR, 0, Math.PI * 2);
+  ctx.fillStyle = lineColor;
+  ctx.fill();
+  ctx.fillStyle = textSec;
+  ctx.font = `600 12px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('0', padL, lineY + 24);
+
+  for (let p = 1; p <= showTotal; p++) {
+    const x = padL + p * spacing;
+    const isDeferral = p <= showK;
+    const color = isDeferral ? deferColor : payColor;
+
+    // Marcas en la línea
+    ctx.strokeStyle = color;
+    ctx.lineWidth = isDeferral ? 2 : 3;
+    ctx.beginPath();
+    ctx.moveTo(x, lineY - 8);
+    ctx.lineTo(x, lineY + 8);
+    ctx.stroke();
+
+    // Puntos
+    ctx.beginPath();
+    ctx.arc(x, lineY, dotR, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+
+    // Números debajo
+    const skipLabel = showTotal > 15 && p % 2 === 0 && p !== showTotal && p !== showK;
+    if (!skipLabel) {
+      ctx.fillStyle = textSec;
+      ctx.font = `500 11px Inter, sans-serif`;
+      ctx.fillText(p, x, lineY + 24);
+    }
+
+    // Flechas de pago (Renta)
+    if (!isDeferral) {
+      ctx.strokeStyle = payColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x, lineY - 24);
+      ctx.lineTo(x, lineY - 12);
+      ctx.stroke();
+      
+      // Punta de flecha
+      ctx.beginPath();
+      ctx.moveTo(x - 5, lineY - 17);
+      ctx.lineTo(x, lineY - 10);
+      ctx.lineTo(x + 5, lineY - 17);
+      ctx.stroke();
+      
+      if (p === showK + 1) {
+        ctx.fillStyle = payColor;
+        ctx.font = `700 13px Inter, sans-serif`;
+        ctx.fillText('R', x, lineY - 30);
+      }
+    }
+  }
+
+  // Puntos suspensivos si exceden el límite de vista
+  if (total > maxShow) {
+    ctx.fillStyle = textSec;
+    ctx.font = `700 14px Inter, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('...', W - padR + 10, lineY + 5);
+  }
+
+  // Corchete de diferimiento (k)
+  const x0 = padL, xk = padL + showK * spacing;
+  ctx.strokeStyle = deferColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x0, lineY + 38);
+  ctx.lineTo(x0, lineY + 44);
+  ctx.lineTo(xk, lineY + 44);
+  ctx.lineTo(xk, lineY + 38);
+  ctx.stroke();
+  
+  ctx.fillStyle = deferColor;
+  ctx.font = `600 12px Inter, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(`k = ${k} (Gracia)`, (x0 + xk) / 2, lineY + 60);
+
+  // Corchete de pagos (n)
+  if (showN > 0) {
+    const xn = padL + showTotal * spacing;
+    ctx.strokeStyle = payColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(xk, lineY - 48);
+    ctx.lineTo(xk, lineY - 54);
+    ctx.lineTo(xn, lineY - 54);
+    ctx.lineTo(xn, lineY - 48);
+    ctx.stroke();
+    
+    ctx.fillStyle = payColor;
+    ctx.font = `600 12px Inter, sans-serif`;
+    ctx.fillText(`n = ${vals().n} pagos`, (xk + xn) / 2, lineY - 62);
+  }
+}
+
+window.addEventListener('resize', update);
+update();
+</script>
+</body>
+</html>

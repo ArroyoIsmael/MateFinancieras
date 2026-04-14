@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matemáticas Financieras | Ismael Arroyo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --text: #0f172a;
+            --text-muted: #64748b;
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --card-bg: #ffffff;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -6px rgba(0, 0, 0, 0.01);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --text: #f8fafc;
+                --text-muted: #94a3b8;
+                --card-bg: #1e293b;
+            }
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #4f46e5, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .badge-1 { background: rgba(79, 70, 229, 0.1); color: #4f46e5; }
+        .badge-2 { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .card-content {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .resource-list {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .resource-list li {
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+
+        .resource-list li::before {
+            content: "→";
+            margin-right: 0.75rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .btn {
+            display: block;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .btn-1 { background: var(--primary); color: white; }
+        .btn-2 { background: var(--secondary); color: white; }
+        
+        .btn:hover { opacity: 0.9; }
+
+        footer {
+            margin-top: 5rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Matemáticas Financieras</h1>
+        <p class="subtitle">Repositorio Central de Recursos y Simuladores</p>
+    </header>
+
+    <main class="course-grid">
+        <section class="card">
+            <span class="badge badge-1">Semestre 1</span>
+            <h2>Matemáticas Financieras 1</h2>
+            <div class="card-content">
+                Fundamentos de interés simple, compuesto y descuento. Bases críticas para la toma de decisiones financieras.
+                <br><br>
+                <ul class="resource-list">
+                    <li>Introducción al Interés Simple</li>
+                    <li>Tasas Nominales y Efectivas</li>
+                    <li>Ecuaciones de Valor</li>
+                </ul>
+            </div>
+            <a href="mate-1/index.html" class="btn btn-1">Acceder al curso</a>
+        </section>
+
+        <section class="card">
+            <span class="badge badge-2">Semestre 2</span>
+            <h2>Matemáticas Financieras 2</h2>
+            <div class="card-content">
+                Anualidades vencidas, anticipadas, diferidas y sistemas de amortización de créditos.
+                <br><br>
+                <ul class="resource-list">
+                    <li>Anualidades Diferidas</li>
+                    <li>Simulador de Créditos</li>
+                    <li>Tablas de Amortización</li>
+                </ul>
+            </div>
+            <a href="mate-2/index.html" class="btn btn-2">Acceder al curso</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 — Prof. Ismael Arroyo</p>
+    </footer>
+</div>
+
+</body>
+</html>
