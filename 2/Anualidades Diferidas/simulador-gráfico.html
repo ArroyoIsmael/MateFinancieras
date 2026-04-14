@@ -162,35 +162,29 @@ function finish() {
   draw();
 }
 
-// ✅ CORREGIDO: Primer pago EXACTAMENTE en periodo k
+// ✅ CORREGIDO: Matemáticas de amortización proporcionales al número de pagos
 function simulateVisualFlow() {
   state.flujos = [];
+  const caidaPorcentual = 100 / state.np; // Lo que baja la deuda en cada pago
   
-  // Períodos 1 a k-1: GRACIA (sin pago)
+  // Períodos 1 a k-1: GRACIA (sin pago, la deuda se mantiene al 100%)
   for(let p = 1; p < state.k; p++) {
     state.flujos.push({ periodo: p, pago: 0, saldo: 100 });
   }
   
-  // Periodo k: PRIMER PAGO ✓
-  state.flujos.push({ periodo: state.k, pago: state.r, saldo: 95 });
-  
-  // Resto de pagos: saldo baja gradualmente
-  let saldoActual = 95;
-  for(let p = state.k + 1; p <= state.k + state.np - 1; p++) {
-    saldoActual = Math.max(0, saldoActual - (100 / state.np));
+  // Periodo k en adelante: PAGOS (la deuda baja gradualmente)
+  let saldoActual = 100;
+  for(let p = state.k; p < state.k + state.np; p++) {
+    saldoActual = Math.max(0, saldoActual - caidaPorcentual);
     state.flujos.push({ periodo: p, pago: state.r, saldo: saldoActual });
   }
-  
-  // Asegurar que termine en 0
-  state.flujos.push({ periodo: state.k + state.np - 1, pago: state.r, saldo: 0 });
 }
 
-// 🖼️ GRÁFICA RECTA Y ANTIALIASING
+// 🖼️ GRÁFICA CORREGIDA (Ejes correctos y antialiasing)
 function draw() {
   const c = document.getElementById('grafica');
   const ctx = c.getContext('2d');
   
-  // 🔧 RESOLUCIÓN 2x PARA ANTIALIASING PERFECTO
   const rect = c.getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
   const w = rect.width * dpr;
@@ -205,84 +199,76 @@ function draw() {
   ctx.clearRect(0, 0, rect.width, 180);
   
   const total = state.flujos.length;
-  const margin = 40;
-  const space = Math.max(30, (rect.width - margin * 2) / Math.min(total, 16));
+  const margin = 30;
+  // Calculamos el espacio disponible entre nodos
+  const space = (rect.width - margin * 2) / Math.max(total - 1, 1); 
   
-  // 📈 EJE HORIZONTAL (recto)
+  // 📈 EJE HORIZONTAL (Línea base)
+  const baseLineY = 140; 
+  
   ctx.strokeStyle = '#cbd5e1';
   ctx.lineWidth = 2;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(margin, 35);
-  ctx.lineTo(rect.width - margin, 35);
-  ctx.lineTo(rect.width - margin, 155);
-  ctx.lineTo(margin, 155);
+  ctx.moveTo(margin, baseLineY);
+  ctx.lineTo(rect.width - margin, baseLineY);
   ctx.stroke();
   
-  // Etiquetas períodos
-  ctx.fillStyle = '#64748b';
-  ctx.font = `12px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  
-  state.flujos.slice(0, 16).forEach((f, i) => {
-    const x = margin + (i * space) + space/2;
-    ctx.fillText(f.periodo.toString(), x, 30);
-  });
-  
-  // 🔵 ZONA GRACIA (hasta k-1)
+  // 🔵 ZONA GRACIA (Fondo visual)
   if(state.k > 1) {
     ctx.fillStyle = 'rgba(79, 70, 229, 0.08)';
-    ctx.fillRect(margin, 35, (state.k - 1) * space, 110);
+    // Abarca desde el inicio hasta justo antes del primer pago
+    ctx.fillRect(margin, 20, (state.k - 1) * space, baseLineY - 20);
     
     ctx.fillStyle = '#4f46e5';
-    ctx.font = `bold 11px Inter, sans-serif`;
-    ctx.fillText("GRACIA", margin + ((state.k - 1) * space)/2, 28);
+    ctx.font = `bold 10px Inter, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText("GRACIA", margin + ((state.k - 1) * space)/2, 35);
   }
   
-  // 🔴 LÍNEA SALDO RECTA (smooth)
+  // 🔴 LÍNEA SALDO RECTA (Deuda cayendo hacia la línea base)
   ctx.strokeStyle = '#ef4444';
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
-  ctx.shadowBlur = 8;
-  ctx.shadowColor = 'rgba(239, 68, 68, 0.3)';
   ctx.beginPath();
   
-  state.flujos.slice(0, 16).forEach((f, i) => {
-    const x = margin + (i * space) + space/2;
-    const y = 35 + (f.saldo / 100) * 110;
+  state.flujos.forEach((f, i) => {
+    const x = margin + (i * space);
+    // CORRECCIÓN Y: Restamos la altura relativa para que inicie arriba y baje
+    const y = baseLineY - (f.saldo / 100) * 100; 
+    
     if(i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   });
-  ctx.shadowBlur = 0;
   ctx.stroke();
   
-  // 💰 BARRAS PAGOS (desde periodo k)
-  state.flujos.slice(0, 16).forEach((f, i) => {
+  // 💰 BARRAS PAGOS Y ETIQUETAS
+  ctx.fillStyle = '#64748b';
+  ctx.font = `11px Inter, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  
+  state.flujos.forEach((f, i) => {
+    const x = margin + (i * space);
+    
+    // Etiqueta del periodo en el eje X
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(f.periodo, x, baseLineY + 8);
+    
+    // Si hay pago, dibujamos la barra verde
     if(f.pago > 0) {
-      const x = margin + (i * space) + space/2;
-      const barWidth = 10;
-      const barHeight = 25;
-      const barY = 155 - barHeight;
-      
-      // Sombra barra
-      ctx.shadowColor = 'rgba(16, 185, 129, 0.3)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetY = 2;
+      const barWidth = 8;
+      const barHeight = 20;
+      const barY = baseLineY - barHeight;
       
       ctx.fillStyle = '#10b981';
       ctx.fillRect(x - barWidth/2, barY, barWidth, barHeight);
-      ctx.shadowBlur = 0;
       
-      // $ en PRIMER pago (periodo k)
+      // Indicador visual en el primer pago
       if(f.periodo === state.k) {
-        ctx.fillStyle = 'white';
-        ctx.font = `bold 11px Inter, sans-serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("$", x, barY + barHeight/2);
+        ctx.fillStyle = '#10b981';
+        ctx.font = `bold 12px Inter, sans-serif`;
+        ctx.fillText("$", x, barY - 16);
       }
     }
   });
@@ -290,11 +276,11 @@ function draw() {
   // 📋 Leyenda
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  ctx.font = `bold 13px Inter, sans-serif`;
+  ctx.font = `bold 12px Inter, sans-serif`;
   ctx.fillStyle = '#ef4444';
-  ctx.fillText("💳 Saldo", margin, 165);
+  ctx.fillText("💳 Saldo Deuda", margin, 170);
   ctx.fillStyle = '#10b981';
-  ctx.fillText("💵 Pagos", margin + 80, 165);
+  ctx.fillText("💵 Pagos Realizados", margin + 110, 170);
 }
 </script>
 </body>
