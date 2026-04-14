@@ -3,427 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador: Anualidades Diferidas</title>
+<title>Simulador Interactivo DUA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
   :root {
-    --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
-    --card-bg: #ffffff;
-    --card-border: rgba(0, 0, 0, 0.05);
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --primary: #4f46e5;
-    --primary-hover: #4338ca;
-    --primary-light: rgba(79, 70, 229, 0.1);
-    --secondary: #10b981;
-    --input-bg: #ffffff;
-    --input-border: #cbd5e1;
-    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    --bg: #f8fafc; --text: #1e293b; --primary: #4f46e5; --secondary: #10b981;
+    --card: #ffffff; --border: #e2e8f0; --shadow: 0 10px 25px rgba(0,0,0,0.05);
   }
-
   @media (prefers-color-scheme: dark) {
-    :root {
-      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      --card-bg: #1e293b;
-      --card-border: rgba(255, 255, 255, 0.1);
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --primary: #818cf8;
-      --primary-hover: #6366f1;
-      --primary-light: rgba(129, 140, 248, 0.15);
-      --secondary: #34d399;
-      --input-bg: #0f172a;
-      --input-border: #334155;
-    }
+    :root { --bg: #0f172a; --text: #f8fafc; --card: #1e293b; --border: #334155; }
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 2rem 1rem; }
   
-  body { 
-    font-family: 'Inter', sans-serif; 
-    background: var(--bg-gradient); 
-    color: var(--text-main); 
-    min-height: 100vh; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem;
-  }
+  .wizard { background: var(--card); border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 600px; padding: 2rem; box-shadow: var(--shadow); text-align: center; }
+  
+  /* Contenedor del Emoji Animado */
+  .avatar-header { margin-bottom: 1.5rem; }
+  .avatar-header img { width: 120px; height: auto; border-radius: 50%; }
 
-  .wizard-container { 
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: 24px;
-    width: 100%;
-    max-width: 600px;
-    padding: 2.5rem;
-    box-shadow: var(--shadow);
-    position: relative;
-    overflow: hidden;
-  }
+  .progress { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 2rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); width: 14%; transition: width 0.3s; }
 
-  .progress-bar {
-    height: 6px;
-    background: var(--input-border);
-    border-radius: 3px;
-    margin-bottom: 2rem;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: var(--primary);
-    width: 14%;
-    transition: width 0.3s ease;
-  }
-
-  .step {
-    display: none;
-    animation: fadeIn 0.4s ease forwards;
-  }
-
+  .step { display: none; animation: slideIn 0.3s ease-out; }
   .step.active { display: block; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateX(10px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
+  h2 { font-size: 1.4rem; margin-bottom: 1.5rem; font-weight: 700; }
+  input, select { width: 100%; padding: 12px; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; }
+  input:focus { border-color: var(--primary); }
 
-  h2 { font-size: 22px; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-main); line-height: 1.3;}
-  
-  .subtitle { font-size: 15px; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+  .option-btn { padding: 15px; border: 2px solid var(--border); border-radius: 12px; background: transparent; color: var(--text); cursor: pointer; font-weight: 600; display: flex; flex-direction: column; align-items: center; transition: 0.2s; }
+  .option-btn.selected { border-color: var(--primary); background: rgba(79, 70, 229, 0.1); }
+  .icon { font-size: 2rem; margin-bottom: 5px; }
 
-  input[type="text"], input[type="number"], select {
-    width: 100%;
-    padding: 14px 16px;
-    font-size: 16px;
-    font-family: 'Inter', sans-serif;
-    background: var(--input-bg);
-    color: var(--text-main);
-    border: 2px solid var(--input-border);
-    border-radius: 12px;
-    outline: none;
-    transition: border-color 0.2s;
-    margin-bottom: 1.5rem;
-  }
+  .nav-btns { display: flex; justify-content: space-between; margin-top: 1.5rem; }
+  button.nav { padding: 10px 20px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; }
+  .next { background: var(--primary); color: white; }
+  .next:disabled { opacity: 0.5; }
+  .back { background: var(--border); color: var(--text); }
 
-  input:focus, select:focus { border-color: var(--primary); }
-
-  .product-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 1.5rem;
-  }
-
-  .product-btn {
-    padding: 20px;
-    border: 2px solid var(--input-border);
-    border-radius: 12px;
-    background: transparent;
-    color: var(--text-main);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .product-btn.selected {
-    border-color: var(--primary);
-    background: var(--primary-light);
-  }
-
-  .product-icon { font-size: 32px; }
-
-  .btn-nav {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-  }
-
-  button {
-    padding: 12px 24px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: opacity 0.2s;
-  }
-
-  .btn-back { background: var(--input-border); color: var(--text-main); }
-  .btn-next { background: var(--primary); color: white; }
-  .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* Summary Styles */
-  .summary-card {
-    background: var(--primary-light);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 2rem;
-  }
-
-  .summary-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  .summary-item { font-size: 14px; }
-  .summary-label { color: var(--text-muted); font-weight: 500; font-size: 12px; text-transform: uppercase;}
-  .summary-value { font-weight: 700; color: var(--text-main); margin-top: 4px; font-size: 16px;}
-
-  canvas#timeline { width: 100%; display: block; border-radius: 12px; border: 1px solid var(--input-border); background: var(--input-bg); margin-top: 1rem; }
-
+  /* Resumen */
+  .summary { background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; text-align: left; }
+  .summary p { margin-bottom: 8px; font-size: 0.95rem; }
+  canvas { width: 100%; background: var(--bg); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); }
 </style>
 </head>
 <body>
 
-<div class="wizard-container">
-  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="wizard">
+  <div class="avatar-header">
+    <img src="./../img/me.gif" alt="Avatar">
+  </div>
+  
+  <div class="progress"><div class="progress-fill" id="bar"></div></div>
 
-  <div class="step active" id="step-1">
-    <h2>¡Bienvenido! ¿Cuál es tu nombre?</h2>
-    <input type="text" id="in-nombre" placeholder="Ingresa tu nombre..." oninput="checkStep(1)">
+  <div class="step active" id="s1">
+    <h2>¿Cómo te llamas?</h2>
+    <input type="text" id="nombre" placeholder="Tu nombre" oninput="val(1)">
   </div>
 
-  <div class="step" id="step-2">
-    <h2 id="title-step-2">Hola, ¿qué te gustaría comprar?</h2>
-    <div class="product-grid">
-      <button class="product-btn" onclick="selectProduct('Laptop', this)"><span class="product-icon">💻</span>Laptop</button>
-      <button class="product-btn" onclick="selectProduct('Automóvil', this)"><span class="product-icon">🚗</span>Automóvil</button>
-      <button class="product-btn" onclick="selectProduct('Viaje', this)"><span class="product-icon">🏖️</span>Viaje</button>
-      <button class="product-btn" onclick="selectProduct('Celular', this)"><span class="product-icon">📱</span>Celular</button>
+  <div class="step" id="s2">
+    <h2 id="saludo">Elige un producto</h2>
+    <div class="grid">
+      <button class="option-btn" onclick="sel('Laptop','💻',this)"><span class="icon">💻</span>Laptop</button>
+      <button class="option-btn" onclick="sel('Auto','🚗',this)"><span class="icon">🚗</span>Auto</button>
+      <button class="option-btn" onclick="sel('Viaje','🏖️',this)"><span class="icon">🏖️</span>Viaje</button>
+      <button class="option-btn" onclick="sel('Celular','📱',this)"><span class="icon">📱</span>Celular</button>
     </div>
   </div>
 
-  <div class="step" id="step-3">
-    <h2>¿Cuánto estás dispuesto a pagar y cada cuándo?</h2>
-    <p class="subtitle">Ingresa la cantidad que podrías dar en cada pago (Renta).</p>
-    <input type="number" id="in-renta" placeholder="$0.00" min="1" oninput="checkStep(3)">
-    <select id="in-frecuencia">
-      <option value="Mensual">Mensual</option>
-      <option value="Quincenal">Quincenal</option>
-      <option value="Semanal">Semanal</option>
-      <option value="Anual">Anual</option>
-    </select>
+  <div class="step" id="s3">
+    <h2>¿Cuánto y cada cuánto pagarás?</h2>
+    <input type="number" id="renta" placeholder="Monto del pago $" oninput="val(3)">
+    <select id="freq"><option>Mensual</option><option>Semanal</option><option>Anual</option></select>
   </div>
 
-  <div class="step" id="step-4">
-    <h2>¿Qué tasa de interés te ofrecen?</h2>
-    <p class="subtitle">Tasa de interés por periodo (en porcentaje).</p>
-    <input type="number" id="in-tasa" placeholder="Ej. 5" min="0.1" step="0.1" oninput="checkStep(4)">
+  <div class="step" id="s4">
+    <h2>Tasa de interés (%)</h2>
+    <input type="number" id="tasa" placeholder="Ej. 5" oninput="val(4)">
   </div>
 
-  <div class="step" id="step-5">
-    <h2>¿Cuántos pagos vas a realizar en total?</h2>
-    <p class="subtitle">Este es el tiempo que durará tu deuda una vez que empieces a pagar (n).</p>
-    <input type="number" id="in-n" placeholder="Ej. 12" min="1" oninput="checkStep(5)">
+  <div class="step" id="s5">
+    <h2>¿Cuántos pagos harás? (n)</h2>
+    <input type="number" id="n" placeholder="Ej. 12" oninput="val(5)">
   </div>
 
-  <div class="step" id="step-6">
-    <h2>¡Compre hoy, pague después!</h2>
-    <p class="subtitle">¿Cuántos periodos de "Gracia" o de "Espera" vas a tener antes de dar tu primer pago? (k).</p>
-    <input type="number" id="in-k" placeholder="Ej. 3" min="1" oninput="checkStep(6)">
+  <div class="step" id="s6">
+    <h2>¿En qué periodo inicias a pagar? (k)</h2>
+    <input type="number" id="k" placeholder="Ej. 4" oninput="val(6)">
   </div>
 
-  <div class="step" id="step-7">
-    <h2>Flujo de Caja del Financiamiento</h2>
-    
-    <div class="summary-card">
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-label">Producto</div>
-          <div class="summary-value" id="out-producto"></div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Pagos (Renta)</div>
-          <div class="summary-value" id="out-renta"></div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Total de Pagos (n)</div>
-          <div class="summary-value" id="out-n"></div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">Periodo de Gracia (k)</div>
-          <div class="summary-value" id="out-k"></div>
-        </div>
-      </div>
-    </div>
-
-    <p class="subtitle" style="margin-bottom: 0;">Representación visual de tus pagos en el tiempo:</p>
-    <canvas id="timeline" height="160"></canvas>
+  <div class="step" id="s7">
+    <h2 id="res-title">¡Felicidades!</h2>
+    <div class="summary" id="res-body"></div>
+    <canvas id="grafica" height="150"></canvas>
   </div>
 
-  <div class="btn-nav">
-    <button class="btn-back" id="btn-back" onclick="prevStep()" style="visibility: hidden;">Atrás</button>
-    <button class="btn-next" id="btn-next" onclick="nextStep()" disabled>Siguiente</button>
+  <div class="nav-btns" id="nav">
+    <button class="nav back" id="btnB" onclick="change(-1)" style="display:none">Atrás</button>
+    <button class="nav next" id="btnN" onclick="change(1)" disabled>Siguiente</button>
   </div>
 </div>
 
 <script>
-  let currentStep = 1;
-  const totalSteps = 7;
-  const data = {
-    nombre: '', producto: '', renta: '', frecuencia: 'Mensual', tasa: '', n: '', k: ''
-  };
+let step = 1;
+const state = { n: '', e: '', r: 0, f: '', i: 0, np: 0, k: 0 };
 
-  function selectProduct(prod, btn) {
-    document.querySelectorAll('.product-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    data.producto = prod;
-    document.getElementById('btn-next').disabled = false;
-  }
+function val(s) {
+  let v = false;
+  if(s==1) v = document.getElementById('nombre').value.length > 2;
+  if(s==3) v = document.getElementById('renta').value > 0;
+  if(s>=4) v = document.querySelector('.active input').value > 0;
+  document.getElementById('btnN').disabled = !v;
+}
 
-  function checkStep(step) {
-    let isValid = false;
-    if (step === 1) isValid = document.getElementById('in-nombre').value.trim() !== '';
-    if (step === 3) isValid = document.getElementById('in-renta').value > 0;
-    if (step === 4) isValid = document.getElementById('in-tasa').value > 0;
-    if (step === 5) isValid = document.getElementById('in-n').value > 0;
-    if (step === 6) isValid = document.getElementById('in-k').value > 0;
-    document.getElementById('btn-next').disabled = !isValid;
-  }
+function sel(p, e, b) {
+  state.p = p; state.e = e;
+  document.querySelectorAll('.option-btn').forEach(x => x.classList.remove('selected'));
+  b.classList.add('selected');
+  document.getElementById('btnN').disabled = false;
+}
 
-  function updateView() {
-    document.querySelectorAll('.step').forEach((el, index) => {
-      el.classList.toggle('active', index + 1 === currentStep);
-    });
+function change(dir) {
+  step += dir;
+  document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('active', i+1 == step));
+  document.getElementById('bar').style.width = (step/7)*100 + '%';
+  document.getElementById('btnB').style.display = step > 1 ? 'block' : 'none';
+  
+  if(step == 2) document.getElementById('saludo').innerText = `Hola ${document.getElementById('nombre').value}, elige un producto:`;
+  if(step == 7) finish();
+  else val(step);
+}
 
-    document.getElementById('progress').style.width = `${(currentStep / totalSteps) * 100}%`;
-    document.getElementById('btn-back').style.visibility = currentStep > 1 && currentStep < 7 ? 'visible' : 'hidden';
+function finish() {
+  document.getElementById('nav').style.display = 'none';
+  state.n = document.getElementById('nombre').value;
+  state.r = document.getElementById('renta').value;
+  state.f = document.getElementById('freq').value;
+  state.i = document.getElementById('tasa').value;
+  state.np = parseInt(document.getElementById('n').value);
+  state.k = parseInt(document.getElementById('k').value);
+
+  document.getElementById('res-title').innerText = `¡Listo, ${state.n}!`;
+  document.getElementById('res-body').innerHTML = `
+    <p><b>Producto:</b> ${state.e} ${state.p}</p>
+    <p><b>Pago:</b> $${state.r} ${state.f}</p>
+    <p><b>Interés:</b> ${state.i}%</p>
+    <p><b>Diferimiento:</b> Inicias en el periodo ${state.k}</p>
+  `;
+
+  confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+  draw();
+}
+
+function draw() {
+  const c = document.getElementById('grafica');
+  const ctx = c.getContext('2d');
+  const w = c.width, h = c.height;
+  ctx.clearRect(0,0,w,h);
+  
+  const total = state.np + state.k;
+  const space = (w - 60) / total;
+  const y = 80;
+
+  ctx.strokeStyle = '#cbd5e1'; ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(w-30, y); ctx.stroke();
+
+  for(let i=0; i<=total; i++) {
+    const x = 30 + (i * space);
+    const color = i < state.k ? '#4f46e5' : '#10b981';
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 4, 0, 7); ctx.fill();
+    ctx.font = "10px sans-serif"; ctx.fillText(i, x-5, y+20);
     
-    const btnNext = document.getElementById('btn-next');
-    if (currentStep === totalSteps) {
-      btnNext.style.display = 'none';
-      document.getElementById('btn-back').style.display = 'none';
-      renderSummary();
-    } else {
-      btnNext.style.display = 'block';
-      btnNext.innerText = currentStep === totalSteps - 1 ? 'Ver Gráfica' : 'Siguiente';
-      btnNext.disabled = true; // Requiere validación
-      if(currentStep === 2 && data.producto) btnNext.disabled = false;
-      checkStep(currentStep);
-    }
-
-    if(currentStep === 2) {
-      data.nombre = document.getElementById('in-nombre').value;
-      document.getElementById('title-step-2').innerText = `Hola ${data.nombre}, ¿qué te gustaría comprar?`;
+    if(i >= state.k) {
+      ctx.strokeStyle = '#10b981'; ctx.beginPath(); ctx.moveTo(x, y-5); ctx.lineTo(x, y-20); ctx.stroke();
     }
   }
-
-  function nextStep() { if (currentStep < totalSteps) { currentStep++; updateView(); } }
-  function prevStep() { if (currentStep > 1) { currentStep--; updateView(); } }
-
-  function renderSummary() {
-    data.renta = parseFloat(document.getElementById('in-renta').value);
-    data.frecuencia = document.getElementById('in-frecuencia').value;
-    data.n = parseInt(document.getElementById('in-n').value);
-    data.k = parseInt(document.getElementById('in-k').value);
-
-    document.getElementById('out-producto').innerText = data.producto;
-    document.getElementById('out-renta').innerText = `$${data.renta.toLocaleString('es-MX')} (${data.frecuencia})`;
-    document.getElementById('out-n').innerText = `${data.n} pagos`;
-    document.getElementById('out-k').innerText = `${data.k} periodos`;
-
-    drawTimeline();
-  }
-
-  function drawTimeline() {
-    const canvas = document.getElementById('timeline');
-    const W = canvas.parentElement.clientWidth;
-    const H = 160;
-    const dpr = window.devicePixelRatio || 1;
-    
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-
-    const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const textSec = dark ? '#94a3b8' : '#64748b';
-    const deferColor = dark ? '#818cf8' : '#4f46e5'; 
-    const payColor = dark ? '#34d399' : '#10b981';
-    const lineColor = dark ? '#334155' : '#cbd5e1';
-
-    ctx.clearRect(0, 0, W, H);
-
-    const padL = 30, padR = 30;
-    const lineY = 80;
-    const { n, k } = data;
-    const total = n + k;
-    const showK = Math.min(k, 10);
-    const showN = Math.min(n, 10);
-    const showTotal = showK + showN;
-    const spacing = (W - padL - padR) / showTotal;
-
-    // Eje principal
-    ctx.strokeStyle = lineColor;
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(padL, lineY); ctx.lineTo(W - padR, lineY); ctx.stroke();
-
-    // Punto 0
-    ctx.fillStyle = lineColor;
-    ctx.beginPath(); ctx.arc(padL, lineY, 5, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = textSec; ctx.font = "12px Inter"; ctx.textAlign = "center";
-    ctx.fillText("0", padL, lineY + 20);
-
-    for (let p = 1; p <= showTotal; p++) {
-      const x = padL + p * spacing;
-      const isDeferral = p <= showK;
-      const color = isDeferral ? deferColor : payColor;
-
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x, lineY - 6); ctx.lineTo(x, lineY + 6); ctx.stroke();
-      ctx.fillStyle = color;
-      ctx.beginPath(); ctx.arc(x, lineY, 5, 0, Math.PI * 2); ctx.fill();
-      
-      ctx.fillStyle = textSec;
-      ctx.fillText(p, x, lineY + 20);
-
-      // Flechas de pago
-      if (!isDeferral) {
-        ctx.strokeStyle = payColor;
-        ctx.beginPath(); ctx.moveTo(x, lineY - 25); ctx.lineTo(x, lineY - 10); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x - 4, lineY - 15); ctx.lineTo(x, lineY - 10); ctx.lineTo(x + 4, lineY - 15); ctx.stroke();
-        if(p === showK + 1) {
-            ctx.fillStyle = payColor; ctx.font = "bold 12px Inter";
-            ctx.fillText("R", x, lineY - 30);
-        }
-      }
-    }
-
-    if (total > showTotal) {
-      ctx.fillStyle = textSec; ctx.fillText("...", W - padR + 10, lineY + 5);
-    }
-
-    // Etiquetas de zona
-    const x0 = padL, xk = padL + showK * spacing, xn = padL + showTotal * spacing;
-    
-    // Gracia
-    ctx.strokeStyle = deferColor;
-    ctx.beginPath(); ctx.moveTo(x0, lineY + 35); ctx.lineTo(x0, lineY + 40); ctx.lineTo(xk, lineY + 40); ctx.lineTo(xk, lineY + 35); ctx.stroke();
-    ctx.fillStyle = deferColor; ctx.font = "500 12px Inter";
-    ctx.fillText(`Gracia (k=${k})`, (x0 + xk) / 2, lineY + 55);
-
-    // Pagos
-    if (showN > 0) {
-      ctx.strokeStyle = payColor;
-      ctx.beginPath(); ctx.moveTo(xk, lineY - 50); ctx.lineTo(xk, lineY - 55); ctx.lineTo(xn, lineY - 55); ctx.lineTo(xn, lineY - 50); ctx.stroke();
-      ctx.fillStyle = payColor;
-      ctx.fillText(`Pagos (n=${n})`, (xk + xn) / 2, lineY - 62);
-    }
-  }
+}
 </script>
 </body>
 </html>
