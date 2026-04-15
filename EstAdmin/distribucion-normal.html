@@ -69,32 +69,50 @@
             animation: float 15s infinite ease-in;
         }
 
-        /* Footer con Profesor */
-  .page-footer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    color: white;
-    text-align: center;
-    animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    max-width: 650px;
-    width: 100%;
-  }
-  .avatar-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.8rem;
-  }
+        .floating-profile {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: .9rem;
+            background: rgba(26, 31, 58, 0.92);
+            border: 2px solid var(--accent-gold);
+            border-radius: 999px;
+            padding: .6rem 1rem .6rem .6rem;
+            box-shadow: 0 0 20px rgba(0, 0, 0, .25);
+            z-index: 51;
+        }
 
-  .avatar-header img {
-    width: 100px;
-    border-radius: 50%;
-    border: 4px solid white;
-    background: white;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
-  }
+        .floating-profile img {
+            width: 56px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .floating-profile .name-wrap {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+
+        .floating-profile .role {
+            font-size: .82rem;
+            color: var(--accent-cyan);
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .floating-profile .name {
+            font-size: 1rem;
+            color: #fff;
+            font-weight: 700;
+            white-space: nowrap;
+        }
 
         @keyframes float {
             0% {
@@ -783,6 +801,18 @@
                 text-align: center;
             }
 
+            .floating-profile {
+                right: 10px;
+                bottom: 10px;
+                max-width: calc(100vw - 190px);
+                padding-right: .75rem;
+            }
+
+            .floating-profile .role,
+            .floating-profile .name {
+                white-space: normal;
+            }
+
             .header-info {
                 justify-content: center;
                 gap: 0.6rem;
@@ -863,6 +893,7 @@
             <div class="timer">⏱️ <span id="timerDisplay">30:00</span></div>
         </div>
     </div>
+
 
     <div class="container" id="slidesContainer" style="display: none;">
         <div class="slide-container">
@@ -1325,12 +1356,8 @@
             </div>
 
         </div>
-        <div class="avatar-header">
-    <img src="./2/img/me2.gif" alt="Profesor">
-    <div class="profesor-name">Docente de Estadística Admninistrativa 2</div>
-    <div class="profesor-name">Ing Ismael Arroyo</div>
-  </div>
-</div>
+        
+    </div>
     </div>
 
     <div class="floating-score" id="floatingScore" style="display: none;">
@@ -1341,6 +1368,14 @@
         <div class="score-item">
             <span class="score-label">Puntos:</span>
             <span class="score-value" id="scorePoints">0</span>
+        </div>
+    </div>
+    <!-- NUEVO: avatar + nombre en la parte inferior derecha -->
+    <div class="floating-profile" id="floatingProfile">
+        <img src="./../2/img/me2.gif" alt="Avatar del docente">
+        <div class="name-wrap">
+            <span class="role">Docente de Estadística Administrativa 2</span>
+            <span class="name">Ing. Ismael Arroyo</span>
         </div>
     </div>
 
@@ -1492,37 +1527,49 @@
             const isCorrect = optionIndex === question.correct;
             const options = document.querySelectorAll(`#slide${slideIndex} .option-btn`);
 
+            // Evitar que se responda dos veces la misma pregunta
+            if (answeredQuestions[slideIndex]) return;
+
             options.forEach((btn, idx) => {
                 if (idx === optionIndex) {
                     btn.classList.add(isCorrect ? 'correct' : 'incorrect');
                 } else if (idx === question.correct) {
+                    // Mostrar siempre la respuesta correcta al usuario
                     btn.classList.add('correct');
                 }
                 btn.disabled = true;
             });
 
-            if (!answeredQuestions[slideIndex]) {
-                if (isCorrect) {
-                    correctAnswers++;
+            // REGISTRO DE RESPUESTA
+            if (isCorrect) {
+                correctAnswers++;
+                // Solo lanzar confetti si es correcto
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
                 }
-                answeredQuestions[slideIndex] = {
-                    correct: isCorrect,
-                    answer: question.options[optionIndex],
-                    correctAnswer: question.options[question.correct]
-                };
             }
 
+            answeredQuestions[slideIndex] = {
+                correct: isCorrect,
+                answer: question.options[optionIndex],
+                correctAnswer: question.options[question.correct]
+            };
+
             const feedback = document.getElementById(`feedback${slideIndex}`);
-            if (feedback) feedback.classList.add('active');
+            if (feedback) {
+                feedback.classList.add('active');
+                // Cambiar texto de feedback si es incorrecto
+                if (!isCorrect) {
+                    feedback.style.borderColor = "var(--danger)";
+                    feedback.style.background = "rgba(231, 76, 60, 0.2)";
+                    feedback.innerHTML = `<strong>❌ Incorrecto.</strong> La respuesta correcta es: ${question.options[question.correct]}`;
+                }
+            }
 
             const nextBtn = document.getElementById(`nextBtn${slideIndex}`);
             if (nextBtn) nextBtn.disabled = false;
 
             updateScoreboard();
-
-            if (typeof confetti === 'function') {
-                confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-            }
         }
 
         function checkTableAnswer() {
