@@ -3,104 +3,277 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador Interactivo DUA</title>
+<title>Simulador Didáctico: Anualidades Diferidas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
   :root {
-    --bg: #f8fafc; --text: #1e293b; --primary: #4f46e5; --secondary: #10b981;
-    --card: #ffffff; --border: #e2e8f0; --shadow: 0 10px 25px rgba(0,0,0,0.05);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --primary: #4f46e5;
+    --secondary: #f43f5e; 
+    --accent: #10b981;
+    --info-bg: #eef2ff;
+    --info-border: #4f46e5;
+    --info-text: #312e81;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #0f172a; --text: #f8fafc; --card: #1e293b; --border: #334155; }
-  }
+  
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 2rem 1rem; }
   
-  .wizard { background: var(--card); border: 1px solid var(--border); border-radius: 24px; width: 100%; max-width: 600px; padding: 2rem; box-shadow: var(--shadow); text-align: center; }
+  /* Fondo Aurora Difuminado */
+  body { 
+    font-family: 'Nunito', sans-serif; 
+    background-color: #0f172a;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.3) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.4) 0px, transparent 50%);
+    background-attachment: fixed;
+    display: flex; 
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;
+    padding: 3rem 1rem; 
+    min-height: 100vh;
+  }
   
-  .avatar-header { margin-bottom: 1.5rem; }
-  .avatar-header img { width: 120px; height: auto; border-radius: 50%; }
+  .logo-inst { position: fixed; top: 24px; right: 24px; width: 180px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); z-index: 100; }
 
-  .progress { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 2rem; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--primary); width: 14%; transition: width 0.3s; }
+  /* Estilos para el encabezado */
+  .page-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 2rem;
+    animation: slideDown 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 100%;
+    max-width: 650px;
+  }
 
-  .step { display: none; animation: slideIn 0.3s ease-out; }
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+    letter-spacing: -1px;
+    word-wrap: break-word;
+  }
+
+  .page-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    word-wrap: break-word;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .wizard { 
+    background: var(--card-bg); 
+    border-radius: 30px; 
+    width: 100%; 
+    max-width: 650px; 
+    padding: 2.5rem; 
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); 
+    text-align: center; 
+    position: relative;
+    backdrop-filter: blur(10px);
+    margin-bottom: 2rem;
+  }
+
+  .progress { height: 10px; background: #f1f5f9; border-radius: 10px; margin: 1.5rem 0 2rem 0; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #34d399, #10b981); width: 12.5%; transition: width 0.5s ease; }
+
+  .step { display: none; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
   .step.active { display: block; }
-  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-  h2 { font-size: 1.4rem; margin-bottom: 1.5rem; font-weight: 700; }
-  input, select { width: 100%; padding: 12px; margin-bottom: 1rem; border: 2px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text); font-size: 1rem; outline: none; }
-  input:focus { border-color: var(--primary); }
+  h2 { font-size: 1.7rem; margin-bottom: 1rem; font-weight: 800; color: var(--text-main); }
+  
+  .info-box { background: var(--info-bg); border-left: 6px solid var(--info-border); padding: 1.2rem; border-radius: 0 15px 15px 0; margin-bottom: 1.5rem; text-align: left; color: var(--info-text); font-size: 0.95rem; line-height: 1.5; }
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
-  .option-btn { padding: 15px; border: 2px solid var(--border); border-radius: 12px; background: transparent; color: var(--text); cursor: pointer; font-weight: 600; display: flex; flex-direction: column; align-items: center; transition: 0.2s; }
-  .option-btn.selected { border-color: var(--primary); background: rgba(79, 70, 229, 0.1); }
-  .icon { font-size: 2rem; margin-bottom: 5px; }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  .nav-btns { display: flex; justify-content: space-between; margin-top: 1.5rem; }
-  button.nav { padding: 10px 20px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; }
-  .next { background: var(--primary); color: white; }
-  .next:disabled { opacity: 0.5; }
-  .back { background: var(--border); color: var(--text); }
+  .option-btn { 
+    padding: 10px; border: 2px solid #e2e8f0; border-radius: 18px; 
+    background: #ffffff; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 0 rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .option-btn:hover { transform: translateY(-3px); }
+  .option-btn.selected { border-color: var(--primary); background: #eef2ff; box-shadow: 0 4px 0 var(--primary); transform: translateY(2px); }
+  .icon { font-size: 2.5rem; margin-bottom: 4px; }
+  .btn-text { font-size: 0.8rem; font-weight: 800; color: var(--text-main); }
 
-  .summary { background: rgba(16, 185, 129, 0.1); padding: 1.5rem; border-radius: 16px; margin-bottom: 1rem; text-align: left; }
-  .summary p { margin-bottom: 8px; font-size: 0.95rem; }
-  canvas { width: 100%; background: var(--bg); border-radius: 12px; margin-top: 10px; border: 1px solid var(--border); image-rendering: pixelated; image-rendering: -moz-crisp-edges; }
+  .live-tracker { background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 16px; padding: 12px; margin-top: 1rem; text-align: left; font-size: 0.9rem; display: none; }
+  .live-tracker span { font-weight: 700; color: var(--secondary); }
+
+  .nav-btns { display: flex; justify-content: space-between; margin-top: 2rem; gap: 15px; }
+  button.nav { padding: 14px; border-radius: 16px; border: none; font-family: 'Nunito'; font-weight: 800; font-size: 1.1rem; cursor: pointer; flex: 1; transition: 0.2s; }
+  .next { background: var(--primary); color: white; box-shadow: 0 6px 0 #3730a3; }
+  .next:disabled { opacity: 0.5; transform: translateY(6px); box-shadow: none; cursor: not-allowed; }
+  .back { background: #e2e8f0; color: #475569; box-shadow: 0 6px 0 #cbd5e1; }
+
+  /* Estilos de Retroalimentación Final */
+  .feedback-box { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 20px; padding: 1.2rem; margin-top: 1.5rem; text-align: left; }
+  .feedback-box h4 { color: #92400e; font-weight: 800; margin-bottom: 8px; font-size: 1rem; }
+  .feedback-box p { font-size: 0.9rem; color: #92400e; line-height: 1.4; }
+
+  .res-avatar { font-size: 5rem; display: block; margin-top: -20px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
+  .summary { background: #ecfdf5; padding: 1.2rem; border-radius: 20px; border: 2px solid #34d399; text-align: left; margin-bottom: 1rem; }
+  .summary p { margin-bottom: 5px; font-size: 1rem; color: #065f46;}
+  canvas { width: 100%; background: #ffffff; border-radius: 16px; border: 2px solid #e2e8f0; }
+
+  input, select { width: 100%; padding: 15px; border-radius: 15px; border: 2px solid #cbd5e1; font-family: 'Nunito'; font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem; outline: none; transition: 0.2s;}
+  input:focus { border-color: var(--primary); background: #fff; }
+
+  /* Footer con Profesor */
+  .page-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: white;
+    text-align: center;
+    animation: slideUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    max-width: 650px;
+    width: 100%;
+  }
+
+  .avatar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .avatar-header img {
+    width: 100px;
+    border-radius: 50%;
+    border: 4px solid white;
+    background: white;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  }
+
+  .profesor-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .page-header h1 {
+      font-size: 2rem;
+    }
+    .page-header h2 {
+      font-size: 1rem;
+    }
+  }
 </style>
 </head>
 <body>
 
+<img src="./../../assets/img/logo-blanco-bene.png" alt="Logo Institución" class="logo-inst">
+
+<div class="page-header">
+  <h1>Matemáticas Financieras 2</h1>
+  <h2>Anualidades Diferidas: Simulador de Representación Gráfica</h2>
+</div>
+
 <div class="wizard">
-  <div class="avatar-header">
-    <img src="./../img/me.gif" alt="Avatar">
-  </div>
-  
   <div class="progress"><div class="progress-fill" id="bar"></div></div>
 
   <div class="step active" id="s1">
-    <h2>¿Cómo te llamas?</h2>
-    <input type="text" id="nombre" placeholder="Tu nombre" oninput="val(1)">
-  </div>
-
-  <div class="step" id="s2">
-    <h2 id="saludo">Elige un producto</h2>
+    <h2>Elige tu personaje</h2>
+    <div class="info-box">¡Bienvenido! Para iniciar este simulador, selecciona el avatar con el que más te identifiques.</div>
     <div class="grid">
-      <button class="option-btn" onclick="sel('Laptop','💻',this)"><span class="icon">💻</span>Laptop</button>
-      <button class="option-btn" onclick="sel('Auto','🚗',this)"><span class="icon">🚗</span>Auto</button>
-      <button class="option-btn" onclick="sel('Viaje','🏖️',this)"><span class="icon">🏖️</span>Viaje</button>
-      <button class="option-btn" onclick="sel('Celular','📱',this)"><span class="icon">📱</span>Celular</button>
+      <button class="option-btn av-btn" onclick="selAv('🧑‍💻','Techie',this)"><span class="icon">🧑‍💻</span><span class="btn-text">Techie</span></button>
+      <button class="option-btn av-btn" onclick="selAv('👩‍🔬','Genio',this)"><span class="icon">👩‍🔬</span><span class="btn-text">Genio</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🚀','Viajero',this)"><span class="icon">🚀</span><span class="btn-text">Viajero</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🦸‍♂️','Héroe',this)"><span class="icon">🦸‍♂️</span><span class="btn-text">Héroe</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🎨','Artista',this)"><span class="icon">🎨</span><span class="btn-text">Artista</span></button>
+      <button class="option-btn av-btn" onclick="selAv('⚽','Atleta',this)"><span class="icon">⚽</span><span class="btn-text">Atleta</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🕵️‍♀️','Analista',this)"><span class="icon">🕵️‍♀️</span><span class="btn-text">Analista</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🐶','Lover',this)"><span class="icon">🐶</span><span class="btn-text">Lover</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🎸','Rockstar',this)"><span class="icon">🎸</span><span class="btn-text">Rockstar</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🏄‍♂️','Surfista',this)"><span class="icon">🏄‍♂️</span><span class="btn-text">Surfista</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🧘‍♀️','Zen',this)"><span class="icon">🧘‍♀️</span><span class="btn-text">Zen</span></button>
+      <button class="option-btn av-btn" onclick="selAv('🏗️','Constructor',this)"><span class="icon">🏗️</span><span class="btn-text">Builder</span></button>
     </div>
   </div>
 
+  <div class="step" id="s2">
+    <h2>¿Cómo te llamas?</h2>
+    <div class="info-box">Para que tu reporte sea oficial, dime tu nombre completo.</div>
+    <input type="text" id="nombre" placeholder="Escribe aquí tu nombre..." oninput="updateAll()">
+  </div>
+
   <div class="step" id="s3">
-    <h2>¿Cuánto y cada cuánto pagarás?</h2>
-    <input type="number" id="renta" placeholder="Monto del pago $" oninput="val(3)">
-    <select id="freq"><option>Mensual</option><option>Semanal</option><option>Anual</option></select>
+    <h2 id="saludo">¿Qué vas a comprar?</h2>
+    <div class="info-box">Las anualidades diferidas se usan para compras donde el primer pago no es inmediato.</div>
+    <div class="grid-2">
+      <button class="option-btn pr-btn" onclick="selPr('Laptop','💻',this)"><span class="icon">💻</span><span class="btn-text">Laptop</span></button>
+      <button class="option-btn pr-btn" onclick="selPr('Auto','🚗',this)"><span class="icon">🚗</span><span class="btn-text">Auto</span></button>
+      <button class="option-btn pr-btn" onclick="selPr('Viaje','🏖️',this)"><span class="icon">🏖️</span><span class="btn-text">Viaje</span></button>
+      <button class="option-btn pr-btn" onclick="selPr('Celular','📱',this)"><span class="icon">📱</span><span class="btn-text">Celular</span></button>
+    </div>
   </div>
 
   <div class="step" id="s4">
-    <h2>Tasa de interés (%)</h2>
-    <input type="number" id="tasa" placeholder="Ej. 5" oninput="val(4)">
+    <h2>Monto de la Renta (R)</h2>
+    <div class="info-box">La <b>Renta</b> es el pago constante que harás en cada periodo elegido.</div>
+    <input type="number" id="renta" placeholder="$ Cantidad a pagar" oninput="updateAll()">
+    <select id="freq" onchange="updateAll()">
+      <option value="" disabled selected>Frecuencia de pagos...</option>
+      <option value="Mensual">Mensual</option><option value="Quincenal">Quincenal</option><option value="Semanal">Semanal</option>
+    </select>
   </div>
 
   <div class="step" id="s5">
-    <h2>¿Cuántos pagos harás? (n)</h2>
-    <input type="number" id="n" placeholder="Ej. 12" oninput="val(5)">
+    <h2>Tasa de interés (i)</h2>
+    <div class="info-box">Es el costo del crédito. Representa cuánto te cobran por periodo por financiar tu compra.</div>
+    <input type="number" id="tasa" placeholder="% Tasa por periodo" oninput="updateAll()">
   </div>
 
   <div class="step" id="s6">
-    <h2>¿En qué periodo inicias a pagar? (k)</h2>
-    <input type="number" id="k" placeholder="Ej. 4" oninput="val(6)">
+    <h2>Número de pagos (n)</h2>
+    <div class="info-box">Es el tiempo real que estarás pagando una vez que termine tu espera.</div>
+    <input type="number" id="n" placeholder="Cantidad de pagos" oninput="updateAll()">
   </div>
 
   <div class="step" id="s7">
-    <h2 id="res-title">¡Felicidades!</h2>
+    <h2>Periodo de gracia (k)</h2>
+    <div class="info-box">El <b>Diferimiento (k)</b> es el tiempo en el que disfrutas el producto pero aún no empiezas a pagar.</div>
+    <input type="number" id="k" placeholder="Periodos de espera" oninput="updateAll()">
+  </div>
+
+  <div class="step" id="s8">
+    <span class="res-avatar" id="final-av"></span>
+    <h2 id="res-title"></h2>
     <div class="summary" id="res-body"></div>
     <canvas id="grafica" height="180"></canvas>
+    
+    <div class="feedback-box">
+      <h4>💡 Retroalimentación del Tema:</h4>
+      <p id="feedback-text"></p>
+    </div>
   </div>
+
+  <div class="live-tracker" id="tracker"></div>
 
   <div class="nav-btns" id="nav">
     <button class="nav back" id="btnB" onclick="change(-1)" style="display:none">Atrás</button>
@@ -108,179 +281,113 @@
   </div>
 </div>
 
+<div class="page-footer">
+  <div class="avatar-header">
+    <img src="./../img/me2.gif" alt="Profesor">
+    <div class="profesor-name">Docente de Matemáticas Financieras 2</div>
+    <div class="profesor-name">Ing Ismael Arroyo</div>
+  </div>
+</div>
+
 <script>
 let step = 1;
-const state = { n: '', e: '', r: 0, f: '', i: 0, np: 0, k: 0 };
+const state = { a: '', n: '', e: '', p: '', r: 0, f: '', i: 0, np: 0, k: 0 };
 
-function val(s) {
-  let v = false;
-  if(s==1) v = document.getElementById('nombre').value.length > 2;
-  if(s==3) v = document.getElementById('renta').value > 0;
-  if(s>=4) v = document.querySelector('.active input').value > 0;
-  document.getElementById('btnN').disabled = !v;
+function selAv(av, txt, btn) {
+  state.a = av;
+  document.querySelectorAll('.av-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected'); updateAll();
 }
 
-function sel(p, e, b) {
+function selPr(p, e, btn) {
   state.p = p; state.e = e;
-  document.querySelectorAll('.option-btn').forEach(x => x.classList.remove('selected'));
-  b.classList.add('selected');
-  document.getElementById('btnN').disabled = false;
+  document.querySelectorAll('.pr-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected'); updateAll();
+}
+
+function updateAll() {
+  let v = false;
+  if(step==1) v = state.a !== '';
+  if(step==2) v = document.getElementById('nombre').value.length > 2;
+  if(step==3) v = state.p !== '';
+  if(step==4) v = document.getElementById('renta').value > 0 && document.getElementById('freq').value !== "";
+  if(step>=5 && step<=7) v = document.querySelector('.active input').value > 0;
+  document.getElementById('btnN').disabled = !v;
+
+  const t = document.getElementById('tracker');
+  if(step>2 && step<8) {
+    t.style.display = 'block';
+    t.innerHTML = `${state.a} <b>${document.getElementById('nombre').value}</b>: Vas por un(a) <span>${state.e}</span> con pagos de <span>$${document.getElementById('renta').value}</span>.`;
+  } else { t.style.display = 'none'; }
 }
 
 function change(dir) {
   step += dir;
   document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('active', i+1 == step));
-  document.getElementById('bar').style.width = (step/7)*100 + '%';
+  document.getElementById('bar').style.width = (step/8)*100 + '%';
   document.getElementById('btnB').style.display = step > 1 ? 'block' : 'none';
-  
-  if(step == 2) document.getElementById('saludo').innerText = `Hola ${document.getElementById('nombre').value}, elige un producto:`;
-  if(step == 7) finish();
-  else val(step);
+  if(step==3) document.getElementById('saludo').innerText = `¡Bienvenido ${document.getElementById('nombre').value}! ¿Qué compramos?`;
+  if(step==8) finish(); else updateAll();
 }
 
 function finish() {
   document.getElementById('nav').style.display = 'none';
-  
   state.n = document.getElementById('nombre').value;
   state.r = parseFloat(document.getElementById('renta').value);
   state.f = document.getElementById('freq').value;
-  state.i = parseFloat(document.getElementById('tasa').value);
   state.np = parseInt(document.getElementById('n').value);
   state.k = parseInt(document.getElementById('k').value);
 
-  document.getElementById('res-title').innerText = `¡Listo, ${state.n}!`;
+  document.getElementById('final-av').innerText = state.a;
+  document.getElementById('res-title').innerText = `¡Lo lograste, ${state.n}!`;
   document.getElementById('res-body').innerHTML = `
-    <p><b>Producto:</b> ${state.e} ${state.p}</p>
-    <p><b>Primer pago:</b> Periodo <strong>${state.k}</strong> (${state.f})</p>
-    <p><b>Pago:</b> $${state.r.toLocaleString()} × ${state.np} ${state.f}</p>
-    <p><b>Interés:</b> ${state.i}%</p>
+    <p>📦 <b>Producto:</b> ${state.e} ${state.p}</p>
+    <p>⏳ <b>Diferimiento:</b> Inicias a pagar en el periodo ${state.k + 1}</p>
+    <p>💵 <b>Plan:</b> ${state.np} pagos de $${state.r.toLocaleString()} (${state.f})</p>
   `;
 
-  confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-  
-  simulateVisualFlow();
+  // RETROALIMENTACIÓN DINÁMICA
+  document.getElementById('feedback-text').innerHTML = `
+    En este ejercicio, elegiste un período de gracia de <b>${state.k} periodos</b>. Como puedes ver en la gráfica, durante ese tiempo la línea de saldo (roja) se mantuvo horizontal porque no hubo pagos. 
+    A partir del periodo <b>${state.k + 1}</b>, empezaste a realizar tus pagos de <b>$${state.r.toLocaleString()}</b>, lo que generó que la deuda comenzara a disminuir gradualmente hasta llegar a cero después de tus <b>${state.np} rentas</b>.
+  `;
+
+  confetti({ particleCount: 180, spread: 80, origin: { y: 0.6 }, colors: ['#4f46e5', '#10b981', '#f43f5e'] });
   draw();
 }
 
-// ✅ CORREGIDO: Matemáticas de amortización proporcionales al número de pagos
-function simulateVisualFlow() {
-  state.flujos = [];
-  const caidaPorcentual = 100 / state.np; // Lo que baja la deuda en cada pago
-  
-  // Períodos 1 a k-1: GRACIA (sin pago, la deuda se mantiene al 100%)
-  for(let p = 1; p < state.k; p++) {
-    state.flujos.push({ periodo: p, pago: 0, saldo: 100 });
-  }
-  
-  // Periodo k en adelante: PAGOS (la deuda baja gradualmente)
-  let saldoActual = 100;
-  for(let p = state.k; p < state.k + state.np; p++) {
-    saldoActual = Math.max(0, saldoActual - caidaPorcentual);
-    state.flujos.push({ periodo: p, pago: state.r, saldo: saldoActual });
-  }
-}
-
-// 🖼️ GRÁFICA CORREGIDA (Ejes correctos y antialiasing)
 function draw() {
-  const c = document.getElementById('grafica');
-  const ctx = c.getContext('2d');
-  
-  const rect = c.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  const w = rect.width * dpr;
-  const h = 180 * dpr;
-  
-  c.width = w;
-  c.height = h;
-  c.style.width = rect.width + 'px';
-  c.style.height = '180px';
-  
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, rect.width, 180);
-  
-  const total = state.flujos.length;
-  const margin = 30;
-  // Calculamos el espacio disponible entre nodos
-  const space = (rect.width - margin * 2) / Math.max(total - 1, 1); 
-  
-  // 📈 EJE HORIZONTAL (Línea base)
-  const baseLineY = 140; 
-  
-  ctx.strokeStyle = '#cbd5e1';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(margin, baseLineY);
-  ctx.lineTo(rect.width - margin, baseLineY);
-  ctx.stroke();
-  
-  // 🔵 ZONA GRACIA (Fondo visual)
+  const c = document.getElementById('grafica'); const ctx = c.getContext('2d');
+  const w = c.parentElement.clientWidth - 40; const h = 180;
+  c.width = w; c.height = h;
+  const total = state.np + state.k;
+  const space = (w - 60) / (total - 1 || 1);
+  const baseLineY = 130;
+
+  ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(30, baseLineY); ctx.lineTo(w-30, baseLineY); ctx.stroke();
+
   if(state.k > 1) {
-    ctx.fillStyle = 'rgba(79, 70, 229, 0.08)';
-    // Abarca desde el inicio hasta justo antes del primer pago
-    ctx.fillRect(margin, 20, (state.k - 1) * space, baseLineY - 20);
-    
-    ctx.fillStyle = '#4f46e5';
-    ctx.font = `bold 10px Inter, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.fillText("GRACIA", margin + ((state.k - 1) * space)/2, 35);
+    ctx.fillStyle = 'rgba(79, 70, 229, 0.1)';
+    ctx.fillRect(30, 20, (state.k - 1) * space, baseLineY - 20);
+    ctx.fillStyle = '#4f46e5'; ctx.font = 'bold 10px Nunito'; ctx.textAlign = 'center';
+    ctx.fillText("GRACIA", 30 + ((state.k-1)*space)/2, 35);
   }
-  
-  // 🔴 LÍNEA SALDO RECTA (Deuda cayendo hacia la línea base)
-  ctx.strokeStyle = '#ef4444';
-  ctx.lineWidth = 3;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  
-  state.flujos.forEach((f, i) => {
-    const x = margin + (i * space);
-    // CORRECCIÓN Y: Restamos la altura relativa para que inicie arriba y baje
-    const y = baseLineY - (f.saldo / 100) * 100; 
+
+  const caida = 100 / state.np;
+  ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 4; ctx.beginPath();
+  for(let i=0; i<total; i++) {
+    const x = 30 + (i * space);
+    const saldo = i < state.k ? 100 : 100 - (i - state.k + 1) * caida;
+    const y = baseLineY - (saldo / 100) * 100;
+    if(i==0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     
-    if(i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  
-  // 💰 BARRAS PAGOS Y ETIQUETAS
-  ctx.fillStyle = '#64748b';
-  ctx.font = `11px Inter, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  
-  state.flujos.forEach((f, i) => {
-    const x = margin + (i * space);
-    
-    // Etiqueta del periodo en el eje X
-    ctx.fillStyle = '#64748b';
-    ctx.fillText(f.periodo, x, baseLineY + 8);
-    
-    // Si hay pago, dibujamos la barra verde
-    if(f.pago > 0) {
-      const barWidth = 8;
-      const barHeight = 20;
-      const barY = baseLineY - barHeight;
-      
-      ctx.fillStyle = '#10b981';
-      ctx.fillRect(x - barWidth/2, barY, barWidth, barHeight);
-      
-      // Indicador visual en el primer pago
-      if(f.periodo === state.k) {
-        ctx.fillStyle = '#10b981';
-        ctx.font = `bold 12px Inter, sans-serif`;
-        ctx.fillText("$", x, barY - 16);
-      }
+    ctx.fillStyle = '#64748b'; ctx.font = 'bold 11px Nunito'; ctx.fillText(i+1, x, baseLineY + 20);
+    if(i >= state.k) {
+      ctx.fillStyle = '#10b981'; ctx.fillRect(x - 5, baseLineY - 20, 10, 20);
     }
-  });
-  
-  // 📋 Leyenda
-  ctx.textAlign = "left";
-  ctx.textBaseline = "middle";
-  ctx.font = `bold 12px Inter, sans-serif`;
-  ctx.fillStyle = '#ef4444';
-  ctx.fillText("💳 Saldo Deuda", margin, 170);
-  ctx.fillStyle = '#10b981';
-  ctx.fillText("💵 Pagos Realizados", margin + 110, 170);
+  }
+  ctx.stroke();
 }
 </script>
 </body>
