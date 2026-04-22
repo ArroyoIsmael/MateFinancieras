@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduEconomy: Intervención del Estado</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --radius: 16px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
+
+        /* Layout */
+        .app-container { max-width: 900px; margin: 0 auto; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .header-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+
+        .external-link { text-decoration: none; background: var(--primary); color: white; padding: 8px 16px; border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; transition: transform 0.2s; }
+
+        /* Login Screen */
+        #login-screen { 
+            position: fixed; inset: 0; background: linear-gradient(135deg, var(--primary), var(--secondary));
+            z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .login-card { 
+            background: white; padding: 2rem; border-radius: var(--radius); width: 100%; max-width: 450px; 
+            text-align: center; box-shadow: var(--shadow);
+        }
+
+        .intro-text { font-size: 0.9rem; color: #64748b; margin: 1.5rem 0; text-align: left; }
+
+        input[type="text"] { 
+            width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; margin-bottom: 1rem; outline: none;
+        }
+
+        .btn-start { 
+            width: 100%; background: var(--primary); color: white; border: none; padding: 14px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer;
+        }
+
+        /* Tabs Navigation */
+        .tabs { display: flex; gap: 10px; background: #e2e8f0; padding: 5px; border-radius: 12px; margin-bottom: 25px; overflow-x: auto; }
+        .tab-btn { 
+            flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; background: transparent;
+            font-weight: 600; color: #64748b; transition: all 0.3s; white-space: nowrap;
+        }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: var(--shadow); }
+
+        .content-section { display: none; animation: fadeIn 0.4s ease; }
+        .content-section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Pattern Cards */
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .pattern-card { 
+            background: var(--card-bg); padding: 20px; border-radius: var(--radius); border-left: 5px solid var(--secondary);
+            box-shadow: var(--shadow); transition: transform 0.2s;
+        }
+        .pattern-card:hover { transform: translateY(-5px); }
+
+        /* Formula & Step-by-Step */
+        .formula-box { background: #f1f5f9; padding: 20px; border-radius: var(--radius); margin: 20px 0; border: 1px dashed var(--primary); }
+        .step { display: flex; gap: 15px; margin-bottom: 15px; }
+        .step-num { background: var(--primary); color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.8rem; }
+
+        /* Simulator */
+        #sim-container { background: white; padding: 25px; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .option-btn { 
+            display: block; width: 100%; text-align: left; padding: 15px; margin: 10px 0; 
+            border: 2px solid #e2e8f0; border-radius: 12px; background: white; cursor: pointer; transition: 0.2s;
+        }
+        .option-btn:hover { border-color: var(--primary); background: #f8fafc; }
+        .option-btn.correct { background: #dcfce7; border-color: var(--success); }
+        .option-btn.wrong { background: #fee2e2; border-color: var(--danger); }
+
+        /* Avatar Widget */
+        #avatar-widget {
+            position: fixed; bottom: 20px; right: 20px; display: flex; align-items: flex-end; gap: 10px; z-index: 100;
+        }
+        .bubble { 
+            background: white; padding: 12px 18px; border-radius: 20px 20px 0 20px; 
+            box-shadow: var(--shadow); max-width: 200px; font-size: 0.85rem; border: 1px solid #e2e8f0;
+        }
+        .avatar-img { 
+            width: 60px; height: 60px; background: var(--accent); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 3px solid white; box-shadow: var(--shadow);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .tabs { font-size: 0.8rem; }
+            .app-container { padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <h1 style="color: var(--primary)">EduEconomy 2.4</h1>
+            <p><strong>La Intervención del Estado en la Economía</strong></p>
+            <div class="intro-text">
+                <p>El Estado interviene para corregir <b>fallas de mercado</b>. Aprenderás sobre:</p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Impuestos y Subsidios</li>
+                    <li>Aranceles y Comercio</li>
+                    <li>Bienes Públicos y Externalidades</li>
+                </ul>
+            </div>
+            <input type="text" id="student-name" placeholder="Escribe tu nombre..." required>
+            <button class="btn-start" onclick="startApp()">Empezar Aprendizaje</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <header class="header-nav">
+            <h2 id="welcome-msg">Hola, Estudiante</h2>
+            <a href="#" class="external-link" onclick="window.open(window.location.href)">
+                <i class="fas fa-external-link-alt"></i> Nueva Pestaña
+            </a>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" onclick="showTab('patterns')"><i class="fas fa-search"></i> Patrones</button>
+            <button class="tab-btn" onclick="showTab('formulas')"><i class="fas fa-gear"></i> Teoría/Fórmulas</button>
+            <button class="tab-btn" onclick="showTab('simulator')"><i class="fas fa-brain"></i> Simulador</button>
+        </nav>
+
+        <section id="patterns" class="content-section active">
+            <h3 style="margin-bottom: 15px;">Comparación de Conceptos Clave</h3>
+            <div class="grid-cards">
+                <div class="pattern-card">
+                    <h4><i class="fas fa-arrow-down" style="color: var(--danger)"></i> Impuestos</h4>
+                    <p>Carga fiscal para desincentivar consumos nocivos (externalidades negativas) o recaudar.</p>
+                    <small><a href="https://www.inegi.org.mx/" target="_blank">Ver datos INEGI ↗</a></small>
+                </div>
+                <div class="pattern-card">
+                    <h4><i class="fas fa-arrow-up" style="color: var(--success)"></i> Subsidios</h4>
+                    <p>Ayuda financiera para incentivar la producción o consumo de bienes necesarios.</p>
+                </div>
+                <div class="pattern-card">
+                    <h4><i class="fas fa-shield-halved" style="color: var(--accent)"></i> Aranceles</h4>
+                    <p>Impuesto a bienes importados para proteger la industria nacional.</p>
+                </div>
+                <div class="pattern-card">
+                    <h4><i class="fas fa-users" style="color: var(--primary)"></i> Bienes Públicos</h4>
+                    <p>No excluibles y no rivales (ej: alumbrado, seguridad nacional).</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="formulas" class="content-section">
+            <h3>Modelado de Intervención</h3>
+            <div class="formula-box">
+                <p><strong>Efecto de un Impuesto en el Precio:</strong></p>
+                $$P_{consumidor} = P_{equilibrio} + Tax$$
+                <p style="font-size: 0.8rem; margin-top: 10px;">Donde el Estado absorbe una parte del excedente del consumidor y productor.</p>
+            </div>
+            
+            <div class="pattern-card">
+                <h4>Ejemplo de Externalidad Negativa</h4>
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <p>Una fábrica contamina un río (Costo Privado < Costo Social).</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <p>El Estado aplica un <b>Impuesto Pigouviano</b>.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <p>El nuevo equilibrio refleja el costo real para la sociedad.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="simulator" class="content-section">
+            <div id="sim-container">
+                <div id="sim-intro">
+                    <h3>Reto de Política Económica</h3>
+                    <p>Resuelve 5 casos prácticos. ¡Puntaje actual: <span id="score">0</span>!</p>
+                    <button class="btn-start" style="margin-top: 15px;" onclick="nextQuestion()">Comenzar Reto</button>
+                </div>
+                <div id="quiz-box" style="display: none;">
+                    <h4 id="question-text">Pregunta aquí</h4>
+                    <div id="options-container"></div>
+                    <button id="submit-answer" class="btn-start" style="margin-top: 15px; display: none;">Enviar Respuesta</button>
+                </div>
+                <div id="result-box" style="display: none;">
+                    <h3>¡Genial, <span id="final-name"></span>!</h3>
+                    <p>Tu puntaje final es: <span id="final-score"></span>/5</p>
+                    <button class="btn-start" onclick="location.reload()">Reiniciar</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="avatar-widget">
+        <div class="bubble" id="avatar-msg">¡Hola! Soy tu guía económico. Ingresa tu nombre para comenzar.</div>
+        <div class="avatar-img">🤖</div>
+    </div>
+
+    <script>
+        let userName = "";
+        let score = 0;
+        let currentQuestionIdx = 0;
+        let selectedOption = null;
+
+        const questions = [
+            { q: "Si el gobierno quiere proteger a los agricultores locales frente a importaciones baratas, ¿qué aplica?", a: ["Arancel", "Subsidio al consumo", "Impuesto al lujo"], correct: 0 },
+            { q: "El alumbrado público es un ejemplo de:", a: ["Bien privado", "Bien público", "Externalidad negativa"], correct: 1 },
+            { q: "Un impuesto a los cigarros busca corregir una:", a: ["Externalidad positiva", "Falla de información", "Externalidad negativa"], correct: 2 },
+            { q: "El Estado otorga dinero a empresas de paneles solares para bajar su precio. Esto es un:", a: ["Arancel", "Subsidio", "Impuesto"], correct: 1 },
+            { q: "Si el Estado fija un precio máximo por debajo del equilibrio, suele ocurrir:", a: ["Exceso de oferta", "Equilibrio perfecto", "Escasez"], correct: 2 }
+        ];
+
+        function startApp() {
+            const input = document.getElementById('student-name');
+            if (input.value.trim() === "") return alert("Por favor, ingresa tu nombre");
+            
+            userName = input.value;
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('welcome-msg').innerText = `Hola, ${userName}`;
+            updateAvatar("¡Excelente! Explora las pestañas para entender cómo el Estado mueve la economía.");
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            // Mensajes dinámicos del Avatar (DUA)
+            const msgs = {
+                patterns: "Aquí puedes comparar conceptos. Fíjate en cómo los impuestos y subsidios son opuestos.",
+                formulas: "¡Momento de matemáticas! Mira cómo el precio cambia cuando el Estado interviene.",
+                simulator: "¡Pon a prueba tus conocimientos! Lee con atención cada caso."
+            };
+            updateAvatar(msgs[tabId]);
+        }
+
+        function updateAvatar(text) {
+            document.getElementById('avatar-msg').innerText = text;
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIdx >= questions.length) {
+                showResults();
+                return;
+            }
+
+            document.getElementById('sim-intro').style.display = 'none';
+            document.getElementById('quiz-box').style.display = 'block';
+            document.getElementById('submit-answer').style.display = 'block';
+            
+            const q = questions[currentQuestionIdx];
+            document.getElementById('question-text').innerText = q.q;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = "";
+            
+            q.a.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(index, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectOption(idx, btn) {
+            selectedOption = idx;
+            document.querySelectorAll('.option-btn').forEach(b => b.style.borderColor = '#e2e8f0');
+            btn.style.borderColor = 'var(--primary)';
+        }
+
+        document.getElementById('submit-answer').onclick = () => {
+            if (selectedOption === null) return;
+
+            const q = questions[currentQuestionIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            
+            if (selectedOption === q.correct) {
+                score++;
+                btns[selectedOption].classList.add('correct');
+                updateAvatar("¡Muy bien! Esa es la decisión económica correcta.");
+            } else {
+                btns[selectedOption].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                updateAvatar("Oh, recuerda que esa política tiene un efecto diferente.");
+            }
+
+            document.getElementById('score').innerText = score;
+            document.getElementById('submit-answer').style.display = 'none';
+            
+            setTimeout(() => {
+                currentQuestionIdx++;
+                selectedOption = null;
+                nextQuestion();
+            }, 2000);
+        };
+
+        function showResults() {
+            document.getElementById('quiz-box').style.display = 'none';
+            document.getElementById('result-box').style.display = 'block';
+            document.getElementById('final-name').innerText = userName;
+            document.getElementById('final-score').innerText = score;
+            updateAvatar(`¡Terminaste, ${userName}! Lograste ${score} aciertos.`);
+        }
+    </script>
+</body>
+</html>
