@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estandarización de la Distribución Normal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <header class="mb-8 text-center sm:text-left">
+            <h1 class="text-3xl sm:text-4xl font-bold text-blue-700 mb-2">Estandarización de la Distribución Normal</h1>
+            <p class="text-lg text-gray-600">Transformando cualquier distribución a un modelo universal.</p>
+        </header>
+
+        <section class="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-100">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">¿Qué es y por qué lo hacemos?</h2>
+            <p class="mb-4 leading-relaxed">
+                En la administración, nos encontramos con datos que tienen diferentes escalas (ventas en pesos, tiempos de producción en minutos, etc.). Para poder comparar estas variables o calcular probabilidades fácilmente utilizando una única tabla, necesitamos <strong>estandarizar</strong>.
+            </p>
+            <p class="mb-4 leading-relaxed">
+                Estandarizar significa transformar nuestra variable original ($x$) que tiene una media ($\mu$) y desviación estándar ($\sigma$) específicas, en un <strong>Valor Z</strong>. La nueva distribución estándar siempre tendrá una media de $0$ y una desviación estándar de $1$.
+            </p>
+            
+            <div class="bg-blue-50 p-4 rounded-lg text-center overflow-x-auto">
+                <p class="text-sm text-blue-800 font-semibold mb-2">Fórmula de Estandarización</p>
+                <div class="text-2xl my-2">
+                    $$z = \frac{x - \mu}{\sigma}$$
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm p-6 mb-8 border border-gray-100">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-700">Simulador de Estandarización</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Media ($\mu$)</label>
+                    <input type="number" id="input-mu" value="1000" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Desviación Estándar ($\sigma$)</label>
+                    <input type="number" id="input-sigma" value="150" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border" min="0.1" step="0.1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Valor a evaluar ($x$)</label>
+                    <input type="number" id="input-x" value="1200" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border">
+                </div>
+            </div>
+
+            <div class="text-center mb-8">
+                <button onclick="calcularZ()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition duration-200 shadow-md">
+                    Calcular Valor Z
+                </button>
+                
+                <div id="resultado-container" class="mt-6 hidden">
+                    <div class="inline-block bg-green-100 border border-green-400 text-green-800 px-6 py-4 rounded-lg">
+                        <p class="text-lg">El valor estandarizado es:</p>
+                        <p class="text-4xl font-bold mt-2" id="resultado-z">Z = 1.33</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative h-64 sm:h-96 w-full">
+                <canvas id="normalChart"></canvas>
+            </div>
+            <p class="text-sm text-center text-gray-500 mt-4">La línea roja representa la posición de tu valor $Z$ en la distribución normal estándar.</p>
+        </section>
+
+    </div>
+
+    <script>
+        let chartInstance = null;
+
+        // Función de densidad de probabilidad (PDF) para la normal estándar
+        function normalPDF(x) {
+            return (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * Math.pow(x, 2));
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('normalChart').getContext('2d');
+            
+            // Generar puntos para la curva (de Z=-4 a Z=4)
+            const labels = [];
+            const data = [];
+            for (let i = -4; i <= 4; i += 0.1) {
+                labels.push(i.toFixed(1));
+                data.push(normalPDF(i));
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Distribución Normal Estándar N(0,1)',
+                        data: data,
+                        borderColor: 'rgba(37, 99, 235, 1)', // Blue 600
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 0,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Valores Z' },
+                            grid: { display: false }
+                        },
+                        y: {
+                            display: false // Ocultamos el eje Y para mantenerlo simple para los alumnos
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Densidad: ' + context.parsed.y.toFixed(4);
+                                }
+                            }
+                        },
+                        annotation: { // Configuración base para la línea Z
+                            annotations: {}
+                        }
+                    }
+                }
+            });
+        }
+
+        function calcularZ() {
+            const mu = parseFloat(document.getElementById('input-mu').value);
+            const sigma = parseFloat(document.getElementById('input-sigma').value);
+            const x = parseFloat(document.getElementById('input-x').value);
+
+            if (isNaN(mu) || isNaN(sigma) || isNaN(x) || sigma <= 0) {
+                alert("Por favor, ingresa valores válidos. La desviación estándar debe ser mayor a 0.");
+                return;
+            }
+
+            // Cálculo
+            const z = (x - mu) / sigma;
+            
+            // Mostrar resultado
+            document.getElementById('resultado-container').classList.remove('hidden');
+            document.getElementById('resultado-z').innerText = `Z = ${z.toFixed(4)}`;
+
+            // Actualizar gráfica para mostrar el punto Z
+            actualizarGrafica(z);
+        }
+
+        function actualizarGrafica(z) {
+            // Limitar Z visualmente entre -4 y 4 para que no se salga de la gráfica
+            let zVisual = Math.max(-4, Math.min(4, z));
+            
+            // Encontrar el índice más cercano en las labels
+            const closestIndex = chartInstance.data.labels.findIndex(label => parseFloat(label) >= zVisual);
+            
+            // Crear un dataset para el punto
+            const pointData = Array(chartInstance.data.labels.length).fill(null);
+            if(closestIndex !== -1) {
+                pointData[closestIndex] = normalPDF(parseFloat(chartInstance.data.labels[closestIndex]));
+            }
+
+            // Si ya existe el dataset del punto, lo actualizamos, si no, lo agregamos
+            if (chartInstance.data.datasets.length > 1) {
+                chartInstance.data.datasets[1].data = pointData;
+                chartInstance.data.datasets[1].label = `Tu Valor Z (${z.toFixed(2)})`;
+            } else {
+                chartInstance.data.datasets.push({
+                    label: `Tu Valor Z (${z.toFixed(2)})`,
+                    data: pointData,
+                    borderColor: 'rgba(220, 38, 38, 1)', // Red 600
+                    backgroundColor: 'rgba(220, 38, 38, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    showLine: true,
+                    type: 'bar', // Usamos barra delgada para simular una línea vertical
+                    barThickness: 2
+                });
+            }
+
+            chartInstance.update();
+        }
+
+        // Inicializar al cargar
+        window.onload = initChart;
+    </script>
+</body>
+</html>

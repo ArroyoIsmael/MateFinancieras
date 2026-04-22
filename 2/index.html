@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decisiones Financieras: El Juego</title>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0d0d1a;
+  color:white;
+  text-align:center;
+}
+
+h1{color:gold}
+
+button{
+  padding:10px 20px;
+  margin:10px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.accept{background:#2ecc71;color:white}
+.reject{background:#e74c3c;color:white}
+
+.card{
+  background:#1a1a3a;
+  padding:20px;
+  margin:20px auto;
+  border-radius:15px;
+  max-width:400px;
+  box-shadow:0 0 20px rgba(0,0,0,.5);
+}
+
+.team{
+  margin:10px;
+  padding:10px;
+  border:2px solid white;
+  border-radius:10px;
+  display:inline-block;
+}
+</style>
+</head>
+
+<body>
+
+<h1>💰 Decisiones Financieras</h1>
+
+<div id="teams"></div>
+
+<div class="card" id="game"></div>
+
+<script>
+
+/* =========================
+   CONFIG
+========================= */
+const teams = [
+  {name:"Equipo 1", money:10000},
+  {name:"Equipo 2", money:10000},
+  {name:"Equipo 3", money:10000}
+];
+
+let turn = 0;
+let round = 0;
+
+/* =========================
+   SONIDOS (Web Audio)
+========================= */
+const ctx = new (window.AudioContext||window.webkitAudioContext)();
+
+function beep(freq,time){
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.frequency.value = freq;
+  osc.start();
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time);
+  osc.stop(ctx.currentTime + time);
+}
+
+function sfxWin(){beep(800,0.2)}
+function sfxLose(){beep(200,0.3)}
+function sfxClick(){beep(500,0.1)}
+
+/* =========================
+   FORMULAS
+========================= */
+function vencida(R,i,n){
+  return R*((Math.pow(1+i,n)-1)/i);
+}
+
+function anticipada(R,i,n){
+  return vencida(R,i,n)*(1+i);
+}
+
+function diferida(R,i,n,k){
+  return vencida(R,i,n)*Math.pow(1+i,k);
+}
+
+/* =========================
+   TARJETAS
+========================= */
+const cards = [
+{
+title:"📱 Celular a crédito",
+text:"Pagas $1100 al final por 6 meses (2%)",
+calc:()=>-vencida(1100,0.02,6)
+},
+{
+title:"🏠 Renta",
+text:"Pagas $1000 al inicio por 6 meses (2%)",
+calc:()=>-anticipada(1000,0.02,6)
+},
+{
+title:"🐷 Ahorro diferido",
+text:"Ahorras $500 por 6 meses empezando en 3 meses (2%)",
+calc:()=>diferida(500,0.02,6,3)
+}
+];
+
+/* =========================
+   RENDER
+========================= */
+function renderTeams(){
+  document.getElementById("teams").innerHTML =
+    teams.map((t,i)=>`
+      <div class="team">
+        ${t.name}<br>$${Math.round(t.money)}
+        ${i===turn?"👈":""}
+      </div>
+    `).join("");
+}
+
+function renderCard(){
+  if(round>=cards.length){
+    endGame();
+    return;
+  }
+
+  const c = cards[round];
+
+  document.getElementById("game").innerHTML = `
+    <h2>${c.title}</h2>
+    <p>${c.text}</p>
+    <button class="accept" onclick="decision(true)">Aceptar</button>
+    <button class="reject" onclick="decision(false)">Rechazar</button>
+  `;
+}
+
+/* =========================
+   DECISION
+========================= */
+function decision(accept){
+
+  if(!confirm("¿Seguro?")) return;
+
+  sfxClick();
+
+  const c = cards[round];
+
+  if(accept){
+    const value = c.calc();
+    teams[turn].money += value;
+
+    if(value>0){sfxWin();flash("green")}
+    else{sfxLose();flash("red")}
+  }
+
+  nextTurn();
+}
+
+/* =========================
+   TURNO
+========================= */
+function nextTurn(){
+  turn++;
+  if(turn>=teams.length){
+    turn=0;
+    round++;
+  }
+
+  renderTeams();
+  renderCard();
+}
+
+/* =========================
+   EFECTO FLASH
+========================= */
+function flash(color){
+  const div=document.createElement("div");
+  div.style=`
+    position:fixed;
+    inset:0;
+    background:${color};
+    opacity:0.2;
+  `;
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(),200);
+}
+
+/* =========================
+   FINAL
+========================= */
+function endGame(){
+  let winner = teams.sort((a,b)=>b.money-a.money)[0];
+
+  document.getElementById("game").innerHTML = `
+    <h2>🏆 Ganador: ${winner.name}</h2>
+    <button onclick="location.reload()">Reiniciar</button>
+  `;
+}
+
+/* =========================
+   INIT
+========================= */
+renderTeams();
+renderCard();
+
+</script>
+
+</body>
+</html>
