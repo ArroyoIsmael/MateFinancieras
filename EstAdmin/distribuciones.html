@@ -44,15 +44,31 @@
             position: relative;
         }
 
+        /* CABECERA CON ESPACIO PARA EL LOGO */
         header {
             background: linear-gradient(90deg, var(--primary) 0%, #a29bfe 100%);
             color: white;
-            padding: 20px;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             z-index: 10;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .school-logo {
+            max-height: 50px;
+            width: auto;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.2); 
+            padding: 5px;
         }
 
         /* Sistema de Pestañas */
@@ -125,7 +141,9 @@
         }
 
         .card {
-            background: white; border-radius: 16px; padding: 25px;
+            background: white; 
+            border-radius: 16px; /* CORRECCIÓN: De 166px a 16px */
+            padding: 25px;
             border-top: 6px solid var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.06);
         }
         .card.bernoulli { border-top-color: #fdcb6e; }
@@ -187,21 +205,35 @@
         #avatar-widget {
             position: absolute; bottom: 20px; right: 20px;
             display: flex; align-items: flex-end; gap: 15px; z-index: 100;
-            max-width: 450px; pointer-events: none;
+            max-width: 480px; pointer-events: none;
         }
 
         .speech-bubble {
             background: white; padding: 15px 20px; border-radius: 20px 20px 0 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.15); font-weight: 600; color: var(--primary);
-            font-size: 1rem; border: 2px solid var(--primary); animation: fadeIn 0.3s;
-            pointer-events: auto;
+            font-size: 0.95rem; line-height: 1.4; border: 2px solid var(--primary); 
+            animation: fadeIn 0.3s; pointer-events: auto;
+            max-width: 320px; /* Evita que crezca de más y corte texto */
         }
 
         .avatar-img {
             width: 80px; height: 80px; border-radius: 50%;
-            background: var(--accent); border: 3px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background-color: var(--accent); border: 3px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
             display: flex; justify-content: center; align-items: center; font-size: 2.5rem;
             flex-shrink: 0; pointer-events: auto;
+            /* CORRECCIÓN: Ajustes para que la foto se centre y no se deforme/desfase */
+            background-size: cover !important;
+            background-position: center top !important;
+            background-repeat: no-repeat !important;
+            overflow: hidden;
+        }
+
+        /* Si pusiste la imagen con una etiqueta <img> en lugar de background, esto la arregla: */
+        .avatar-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
         }
 
         @media (max-width: 768px) {
@@ -209,15 +241,20 @@
             .content-area { padding: 15px; padding-bottom: 120px; }
             .grid-container { grid-template-columns: 1fr; }
             #avatar-widget { left: 10px; right: 10px; bottom: 10px; flex-direction: row-reverse; justify-content: flex-end; max-width: 100%; }
-            .speech-bubble { border-radius: 20px 20px 20px 0; font-size: 0.9rem;}
+            .speech-bubble { border-radius: 20px 20px 20px 0; font-size: 0.85rem;}
             .avatar-img { width: 60px; height: 60px; font-size: 1.8rem; }
+            header { flex-direction: column; gap: 5px; padding: 10px; }
+            .header-title { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <header>🌟 LABORATORIO DE ESTADÍSTICA ADMINISTRATIVA</header>
+        <header>
+            <img class="school-logo" alt="Logo Escuela" src="./../assets/img/logo-blanco-bene.png">
+            <div class="header-title">🌟 LABORATORIO DE ESTADÍSTICA ADMINISTRATIVA</div>
+        </header>
 
         <div class="tabs-nav" id="main-nav">
             <button class="tab-btn active" onclick="switchTab('patrones', this)">🔍 Patrones</button>
@@ -370,13 +407,16 @@
 
         <div id="avatar-widget" style="display:none;">
             <div class="speech-bubble" id="avatar-text">¡Hola! Listo para la clase de hoy.</div>
-            <div class="avatar-img">👨‍🏫</div> 
+            
+            <div class="avatar-img" style="background-image: url('./../assets/img/me-real.png');">
+                </div> 
+            
         </div>
 
     </div>
 
     <script>
-        // Configuración MathJax con delimitadores estrictos para prevenir colisiones con el símbolo del dólar (monedas)
+        // Configuración MathJax
         window.MathJax = {
             tex: { inlineMath: [['\\(', '\\)']] },
             startup: { typeset: false }
@@ -479,7 +519,6 @@
                 state.selectedOption = null;
                 state.isAnswered = false;
                 
-                // RESET TOTAL DE LOS BOTONES
                 document.querySelectorAll('.option-btn').forEach(btn => {
                     btn.classList.remove('selected', 'incorrect');
                     btn.disabled = false;
@@ -516,7 +555,6 @@
             const current = scenarios[state.currentQuestion];
             const banner = document.getElementById('feedback-banner');
             
-            // Evaluamos visualmente con clases CSS
             document.querySelectorAll('.option-btn').forEach(btn => {
                 if(btn.innerText !== current.answer && btn.classList.contains('selected')) {
                    btn.classList.add('incorrect');
@@ -539,7 +577,7 @@
                 setAvatarMessage(`Un pequeño tropiezo. Lee la explicación para ver por qué correspondía a ${current.answer}.`);
             }
             
-            MathJax.typesetPromise([banner]); // Para renderizar cualquier fórmula en la explicación
+            MathJax.typesetPromise([banner]); 
         }
 
         function siguienteCaso() {
@@ -558,7 +596,6 @@
             resultadosView.classList.add('active');
             resultadosView.style.display = 'block';
             
-            // NOMBRE DEL ALUMNO INTEGRADO
             document.getElementById('final-message').innerHTML = `Excelente trabajo, <strong style="color: var(--primary);">${state.userName}</strong>.<br>Lograste ${state.score} de ${scenarios.length} aciertos correctos.`;
             
             if(state.score === scenarios.length){
